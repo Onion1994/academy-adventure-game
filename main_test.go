@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 )
@@ -713,23 +711,15 @@ func TestUseAbsentEntity(t *testing.T) {
 }
 
 func TestShowCommands(t *testing.T) {
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
 
-	showCommands()
+	mockDisplay := &MockDisplay{}
 
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	// Act
+	showCommands(mockDisplay)
 
 	// Assert
-	output := buf.String()
+	output := strings.Join(mockDisplay.Output, "")
+
 	expectedOutput := fmt.Sprintln("-exit -> quits the game\n\n-commands -> shows the commands\n\n-look -> shows the content of the room.\n\n-approach <entity> -> to approach an entity\n\n-leave -> to leave an entity\n\n-inventory -> shows items in the inventory\n\n-take <item> -> to take an item into your inventory\n\n-drop <item> -> to drop an item from your inventory and move it to the current room\n\n-use <item> -> to make use of a certain item when you approach an entity\n\n-move <direction> -> to move to a different room\n\n-map -> shows the directions you can take")
 
 	if output != expectedOutput {
