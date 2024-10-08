@@ -9,6 +9,16 @@ import (
 	"strings"
 )
 
+type Display interface {
+	Show( text string )
+ }
+
+ type ConsoleDisplay struct {}
+
+ func (c ConsoleDisplay) Show(text string) {
+	fmt.Println(text)
+ }
+
 func clearScreen() {
     var cmd *exec.Cmd
     if runtime.GOOS == "windows" {
@@ -180,14 +190,14 @@ func (p *Player) Drop(itemName string) {
 	}
 }
 
-func (p *Player) ShowInventory() {
+func (p *Player) ShowInventory(d Display) {
 	if len(p.Inventory) == 0 {
-		fmt.Printf("Your inventory is empty.\nAvailable space: %d\n", p.AvailableWeight)
+		d.Show(fmt.Sprintf("Your inventory is empty.\nAvailable space: %d\n", p.AvailableWeight))
 		return
 	}
-	fmt.Printf("Available space: %d\nYour inventory contains:\n", p.AvailableWeight)
+	d.Show(fmt.Sprintf("Available space: %d\nYour inventory contains:\n", p.AvailableWeight))
 	for itemName, item := range p.Inventory {
-		fmt.Printf("- %s: %s Weight: %d\n", itemName, item.Description, item.Weight)
+		d.Show(fmt.Sprintf("- %s: %s Weight: %d\n", itemName, item.Description, item.Weight))
 	}
 }
 
@@ -625,7 +635,7 @@ func main() {
 				}
 			case "inventory":
 				clearScreen()
-				player.ShowInventory()
+				player.ShowInventory(ConsoleDisplay{})
 			case "approach":
 				clearScreen()
 				if len(args) > 0 {

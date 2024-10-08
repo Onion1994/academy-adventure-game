@@ -23,6 +23,14 @@ func setUpValidInteractions() {
 	}
 }
 
+type MockDisplay struct {
+	Output []string
+}
+
+func (m *MockDisplay) Show(text string) {
+	m.Output = append(m.Output, text)
+}
+
 
 func TestPlayerMovement(t *testing.T) {
 	//Arrange
@@ -216,58 +224,33 @@ func TestShowInventory(t *testing.T) {
 	
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
 	player.Take(item.Name)
-
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
+	mockDisplay := &MockDisplay{}
 
 	// Act
-	player.ShowInventory()
-	
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	player.ShowInventory(mockDisplay)
 
 	// Assert
-	output := buf.String()
 	expectedOutput := fmt.Sprintf("Available space: %d\nYour inventory contains:\n- %s: %s Weight: %d\n", player.AvailableWeight, item.Name, item.Description, item.Weight)
 
+	output := strings.Join(mockDisplay.Output, "")
 	if output != expectedOutput {
 		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
 	}
 }
+
 
 func TestShowInventoryIsEmpty(t *testing.T) {
 	// Arrange
 	room := Room{Items: make(map[string]*Item)}
 	
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
-
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
+	mockDisplay := &MockDisplay{}
 
 	// Act
-	player.ShowInventory()
-	
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
-
-	// Assert
-	output := buf.String()
+	player.ShowInventory(mockDisplay)
 	expectedOutput := fmt.Sprintf("Your inventory is empty.\nAvailable space: %d\n", player.AvailableWeight)
 
+	output := strings.Join(mockDisplay.Output, "")
 	if output != expectedOutput {
 		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
 	}
