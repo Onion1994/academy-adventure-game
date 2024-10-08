@@ -279,9 +279,9 @@ func (p *Player) Leave() {
 	}
 }
 
-func (p *Player) ShowMap() {
+func (p *Player) ShowMap(d Display) {
 	for direction, exit := range p.CurrentRoom.Exits {
-		fmt.Printf("%s: %s\n", direction, exit.Name)
+		d.Show(fmt.Sprintf("%s: %s\n", direction, exit.Name))
 	}
 }
 
@@ -680,7 +680,7 @@ func main() {
 				}
 			case "map":
 				clearScreen()
-				player.ShowMap()
+				player.ShowMap(ConsoleDisplay{})
 			case computerPassword:
 				continue
 			default:

@@ -600,24 +600,14 @@ func TestShowMap(t * testing.T) {
 
 	player := Player{CurrentRoom: &room1}
 	
-	//Act
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
+	mockDisplay := &MockDisplay{}
 
-	player.ShowMap()
-
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	// Act
+	player.ShowMap(mockDisplay)
 
 	// Assert
-	output := buf.String()
+	output := strings.Join(mockDisplay.Output, "")
+
 	expectedOutput := fmt.Sprintf("north: %s\n", player.CurrentRoom.Exits["north"].Name)
 
 	if output != expectedOutput {
