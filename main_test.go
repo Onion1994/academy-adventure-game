@@ -266,24 +266,13 @@ func TestShowRoom(t *testing.T) {
 
 	player := Player{CurrentRoom: &room}
 
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
+	mockDisplay := &MockDisplay{}
 
 	// Act
-	player.ShowRoom()
-
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	player.ShowRoom(mockDisplay)
 
 	// Assert
-	output := buf.String()
+	output := strings.Join(mockDisplay.Output, "")
 	expectedOutput := fmt.Sprintf(
 		"You are in %s\n\n%s\n\nYou can approach:\n- %s\n\nThe room contains:\n- %s: %s Weight: %d",
 		room.Name,
@@ -309,24 +298,14 @@ func TestShowRoomEngagedEntity(t *testing.T) {
 
 	player := Player{CurrentRoom: &room, CurrentEntity: &entity}
 
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
+	mockDisplay := &MockDisplay{}
 
 	// Act
-	player.ShowRoom()
-
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	player.ShowRoom(mockDisplay)
 
 	// Assert
-	output := buf.String()
+	output := strings.Join(mockDisplay.Output, "")
+
 	expectedOutput := fmt.Sprintf(
 		"You are in %s\n\n%s\n\nYou can approach:\n- %s (currently approached)\n\nThe room contains:\n- %s: %s Weight: %d",
 		room.Name,
@@ -352,24 +331,14 @@ func TestShowHiddenItems(t *testing.T) {
 
 	player := Player{CurrentRoom: &room}
 
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
+	mockDisplay := &MockDisplay{}
 
 	// Act
-	player.ShowRoom()
-
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	player.ShowRoom(mockDisplay)
 
 	// Assert
-	output := buf.String()
+	output := strings.Join(mockDisplay.Output, "")
+
 	expectedOutput := fmt.Sprintf(
 		"You are in %s\n\n%s\n\nYou can approach:\n- %s\n",
 		room.Name,
@@ -392,24 +361,14 @@ func TestNotShowHiddenEntities(t *testing.T) {
 
 	player := Player{CurrentRoom: &room}
 
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	defer w.Close()
-	
-	original := os.Stdout
-	os.Stdout = w
+	mockDisplay := &MockDisplay{}
 
 	// Act
-	player.ShowRoom()
-
-	w.Close()
-	os.Stdout = original
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	player.ShowRoom(mockDisplay)
 
 	// Assert
-	output := buf.String()
+	output := strings.Join(mockDisplay.Output, "")
+
 	expectedOutput := fmt.Sprintf(
 		"You are in %s\n\n%s\n\nThe room contains:\n- %s: %s Weight: %d\n",
 		room.Name,

@@ -201,32 +201,32 @@ func (p *Player) ShowInventory(d Display) {
 	}
 }
 
-func (p *Player) ShowRoom() {
-    fmt.Printf("You are in %s\n\n%s\n", p.CurrentRoom.Name, p.CurrentRoom.Description)
+func (p *Player) ShowRoom(d Display) {
+    d.Show(fmt.Sprintf("You are in %s\n\n%s\n", p.CurrentRoom.Name, p.CurrentRoom.Description))
 
 	if p.EntitiesArePresent() {
-			fmt.Println("\nYou can approach:")
+			d.Show("\nYou can approach:\n")
 			for _, entity := range p.CurrentRoom.Entities {
 				switch {
 				case p.CurrentEntity != nil:
 					if entity.Name == p.CurrentEntity.Name {
-						fmt.Printf("- %s (currently approached)\n", entity.Name)
+						d.Show(fmt.Sprintf("- %s (currently approached)\n", entity.Name))
 					} else if !entity.Hidden{
-						fmt.Printf("- %s\n", entity.Name)
+						d.Show(fmt.Sprintf("- %s\n", entity.Name))
 					}
 				default:
 					if !entity.Hidden{
-						fmt.Printf("- %s\n", entity.Name)
+						d.Show(fmt.Sprintf("- %s\n", entity.Name))
 					}
 				}
 			}
 		}
 		
 	if p.ItemsArePresent() {
-			fmt.Println("\nThe room contains:")
+			d.Show("\nThe room contains:")
 			for itemName, item := range p.CurrentRoom.Items {
 				if !item.Hidden {
-					fmt.Printf("- %s: %s Weight: %d\n", itemName, item.Description, item.Weight)
+					d.Show(fmt.Sprintf("\n- %s: %s Weight: %d\n", itemName, item.Description, item.Weight))
 				}
 			}
 		}
@@ -273,7 +273,7 @@ func (p *Player) Approach(entityName string) {
 func (p *Player) Leave() {
 	if p.CurrentEntity != nil {
 		p.CurrentEntity = nil
-		p.ShowRoom()
+		p.ShowRoom(ConsoleDisplay{})
 	} else {
 		fmt.Println("You have not approached anything. If you wish to leave the game, use the exit command.")
 	}
@@ -618,7 +618,7 @@ func main() {
 				showCommands()
 			case "look":
 				clearScreen()
-				player.ShowRoom()
+				player.ShowRoom(ConsoleDisplay{})
 			case "take":
 				clearScreen()
 				if len(args) > 0 {
