@@ -46,24 +46,23 @@ func (p *Player) Take(itemName string, d Display) {
 		return
 	case isPlate(itemName):
 		if itemName == plateOrder[currentPlateIndex] {
-			p.Inventory[item.Name] = item
-			p.ChangeCarriedWeight(item, "increase")
-			delete(p.CurrentRoom.Items, item.Name)
+			p.AddToInventory(item, d)
 			currentPlateIndex++
-
-			d.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
 		} else {
 			d.Show(fmt.Sprintln("As you attempt to grab the greasy plates without removing the ones stacked above them, they slip from your grasp and shatter, creating a chaotic mess.\n\nNow Rosie is very grumpy."))
 			gameOver = true
 		}
 		
 	default:
-		p.Inventory[item.Name] = item
-		p.ChangeCarriedWeight(item, "increase")
-		delete(p.CurrentRoom.Items, item.Name)
-
-		d.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
+		p.AddToInventory(item, d)
 	}
+}
+
+func (p *Player) AddToInventory(item *Item, d Display) {
+	p.Inventory[item.Name] = item
+	p.ChangeCarriedWeight(item, "increase")
+	delete(p.CurrentRoom.Items, item.Name)
+	d.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
 }
 
 
