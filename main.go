@@ -13,6 +13,20 @@ var validInteractions = []*Interaction{}
 var plateOrder = []string{"first-plate", "second-plate", "third-plate", "fourth-plate", "fifth-plate", "sixth-plate"}
 var currentPlateIndex = 0
 var gameOver = false
+var introduction string
+var introductionShown bool
+var remainingPasswordAttempts int
+var computerPassword string
+var unlockComputer *Event
+var grumpyRosie *Event
+var dishwasherChallengeWon *Event
+var isAttemptingPassword bool
+var isAttemptingTerminal bool
+var IsFirstCommand bool
+var player *Player
+var staffRoom *Room
+var codingLab *Room
+var terminalRoom *Room
 
 func isPlate(itemName string) bool {
 	for _, plate := range plateOrder {
@@ -42,10 +56,10 @@ func clearScreen() {
 	cmd.Run()
 }
 
-func main() {
-	introduction := "It's the last day at the Academy, and you and your fellow graduates are ready to take on the final hack-day challenge.\nHowever, this time, it's different. Alan and Dan, your instructors, have prepared something more intense than ever before — a true test of your problem-solving and coding skills.\nThe doors to the academy are locked, the windows sealed. The only way out is to find and solve a series of riddles that lead to the terminal in a hidden room.\nThe challenge? Crack the code on the terminal to unlock the doors. But it's not that simple.\nYou'll need to gather items, approach Alan and Dan for cryptic tips, and outsmart the obstacles they've laid out for you.\nAs the tension rises, only your wits, teamwork, and knowledge can guide you to freedom.\nAre you ready to escape?\nOh and remember... You don't want to make Rosie grumpy! So don't do anything crazy.\n\nif at any point you feel lost, type 'commands' to display the list of all commands.\nThe command 'look' is always useful to get your bearings and see the options available to you.\nThe command 'exit' will make you quit the game at any time. Make sure you do mean to use it, or you will inadvertently lose all of your progress!"
+func setupGame() {
+	introduction = "It's the last day at the Academy, and you and your fellow graduates are ready to take on the final hack-day challenge.\nHowever, this time, it's different. Alan and Dan, your instructors, have prepared something more intense than ever before — a true test of your problem-solving and coding skills.\nThe doors to the academy are locked, the windows sealed. The only way out is to find and solve a series of riddles that lead to the terminal in a hidden room.\nThe challenge? Crack the code on the terminal to unlock the doors. But it's not that simple.\nYou'll need to gather items, approach Alan and Dan for cryptic tips, and outsmart the obstacles they've laid out for you.\nAs the tension rises, only your wits, teamwork, and knowledge can guide you to freedom.\nAre you ready to escape?\nOh and remember... You don't want to make Rosie grumpy! So don't do anything crazy.\n\nif at any point you feel lost, type 'commands' to display the list of all commands.\nThe command 'look' is always useful to get your bearings and see the options available to you.\nThe command 'exit' will make you quit the game at any time. Make sure you do mean to use it, or you will inadvertently lose all of your progress!"
 
-	introductionShown := false
+	introductionShown = false
 
 	validInteractions = []*Interaction{
 		{
@@ -85,17 +99,17 @@ func main() {
 		},
 	}
 
-	dishwasherChallengeWon := &Event{Description: "dishwasher-loaded", Outcome: "You load the dirty plates into the dishwasher and switch it on, a feeling of being used washing over you.\nThis challenge felt less like teamwork and more like being roped into someone else's mess.\nWith a sigh, you decide to head back to Alan to see if this effort has truly led you to victory...\n", Triggered: false}
+	dishwasherChallengeWon = &Event{Description: "dishwasher-loaded", Outcome: "You load the dirty plates into the dishwasher and switch it on, a feeling of being used washing over you.\nThis challenge felt less like teamwork and more like being roped into someone else's mess.\nWith a sigh, you decide to head back to Alan to see if this effort has truly led you to victory...\n", Triggered: false}
 
-	grumpyRosie := &Event{Description: "rosie-is-grumpy", Outcome: "Rosie caught you in the act of swiping a lanyard from a fellow student.\nYou have made Rosie grumpy and you've lost the game.\n", Triggered: false}
+	grumpyRosie = &Event{Description: "rosie-is-grumpy", Outcome: "Rosie caught you in the act of swiping a lanyard from a fellow student.\nYou have made Rosie grumpy and you've lost the game.\n", Triggered: false}
 
-	unlockComputer := &Event{Description: "computer-is-unlocked", Outcome: "You enter the password, holding your breath. Yes! The screen flickers to life.\nyou've unlocked the computer and now have full access.\n\nYou should approach Alan to find out what's next...\n", Triggered: false}
+	unlockComputer = &Event{Description: "computer-is-unlocked", Outcome: "You enter the password, holding your breath. Yes! The screen flickers to life.\nyou've unlocked the computer and now have full access.\n\nYou should approach Alan to find out what's next...\n", Triggered: false}
 
-	computerPassword := "iiwsccrtc"
+	computerPassword = "iiwsccrtc"
 
-	remainingPasswordAttempts := 10
+	remainingPasswordAttempts = 10
 
-	staffRoom := Room{
+	staffRoom = &Room{
 		Name:        "break-room",
 		Description: "A cozy lounge designed for both academy students and tutors, offering a welcoming space to unwind and socialise.\nComfortable seating invites you to relax, while the warm ambiance encourages lively conversations and friendly exchanges.",
 		Items:       make(map[string]*Item),
@@ -103,7 +117,7 @@ func main() {
 		Exits:       make(map[string]*Room),
 	}
 
-	codingLab := Room{
+	codingLab = &Room{
 		Name:        "coding-lab",
 		Description: "A bright, tech-filled room with sleek workstations, whiteboards, and collaborative spaces.\nThe air buzzes with creativity as students code, share ideas, and tackle challenges together.",
 		Items:       make(map[string]*Item),
@@ -111,7 +125,7 @@ func main() {
 		Exits:       make(map[string]*Room),
 	}
 
-	terminalRoom := Room{
+	terminalRoom = &Room{
 		Name:        "terminal-room",
 		Description: "As you step into the terminal room, you're greeted by the soft hum of machines and the flickering glow of monitors lining the walls.\n\nThe air is charged with a sense of urgency, filled with the scent of freshly brewed coffee mingling with the faint odor of electrical components.\n\nIn the center of the room, a sleek, state-of-the-art terminal stands atop a polished wooden desk.",
 		Items:       make(map[string]*Item),
@@ -119,72 +133,78 @@ func main() {
 		Exits:       make(map[string]*Room),
 	}
 
-	staffRoom.Exits["south"] = &codingLab
-	codingLab.Exits["north"] = &staffRoom
-	codingLab.Exits["east"] = &terminalRoom
-	terminalRoom.Exits["west"] = &codingLab
+	staffRoom.Exits["south"] = codingLab
+	codingLab.Exits["north"] = staffRoom
+	codingLab.Exits["east"] = terminalRoom
+	terminalRoom.Exits["west"] = codingLab
 
-	rosie := Entity{Name: "rosie", Description: "Ugh, what? Sorry, I can't think straight without a brew. Get me some tea, and then we'll talk...", Hidden: false}
-	kettle := Entity{Name: "kettle", Description: "You set the kettle to boil, brewing the strongest cup of tea you've ever made. A comforting aroma fills the room as the tea is now ready.\n\n(tea can now be found in the room)\n", Hidden: false}
-	sofa := Entity{Name: "sofa", Description: "You come across one of your fellow academy students fast asleep on the sofa. Next to them, their lanyard lies carelessly within reach.\nYou know you shouldn't take it, but the temptation lingers...\n\n(abandoned-lanyard can now be found in the room)\n", Hidden: false}
-	tea := Item{Name: "tea", Description: "A steaming cup of Yorkshire tea, rich and comforting.", Weight: 2, Hidden: true}
-	lanyard := Item{Name: "lanyard", Description: "Your lanyard, a key to unlocking any door within the building.", Weight: 1, Hidden: true}
-	abandonedLanyard := Item{Name: "abandoned-lanyard", Description: "An abandoned lanyard, a key to unlocking any door within the building.", Weight: 1, Hidden: true}
-	computer := Entity{Name: "computer", Description: "Alan's computer. You need the password to get in.\n\nRemaining attempts: 10.\n\nType 'leave' to stop entering the password.\n\nEnter the password:\n", Hidden: false}
-	alan := Entity{Name: "alan", Description: "Oh, you've finally made it... What are you waiting for, crack on with the code. The computer is right there...\nWhat's that? You don't know the password? Hmm... I seem to have forgotten it myself, but I do recall it's nine letters long.\nAnd for the love of all that's good, it's definitely not 'waterfall'!", Hidden: false}
-	agileManifesto := Entity{Name: "agile-manifesto", Description: "A large, framed document hangs prominently on the wall, its edges slightly frayed\nYou can almost feel the energy of past brainstorming sessions in the air as you read the four key values:\n\nIndividuals and Interactions over processes and tools.\n\nWorking Software over comprehensive documentation.\n\nCustomer Collaboration over contract negotiation.\n\nResponding To Change over following a plan.\n", Hidden: false}
-	desk := Entity{Name: "desk", Description: "You approach the desk and spot a messy pile of dirty plates, stacked haphazardly. You think to yourself that somebody was too lazy to load the dishwasher.\nThe stack is too heavy to carry all the plates at once, and taking plates from the centre or bottom of the stack could pose a risk...\n\n(stack of plates can now be found in the room)\n\n", Hidden: true}
-	dishwasher := Entity{Name: "dishwasher", Description: "A stainless steel dishwasher sits quietly in the corner, its door slightly ajar.\nThe faint scent of soap lingers, and the racks inside are half-empty, waiting for the next load of dirty dishes to be placed inside.\nIt hums faintly, as if anticipating the task it was built for.", Hidden: true}
-	firstPlate := Item{Name: "first-plate", Description: "The plate on top of the stack.", Weight: 6, Hidden: true}
-	secondPlate := Item{Name: "second-plate", Description: "The second plate of the stack.", Weight: 6, Hidden: true}
-	thirdPlate := Item{Name: "third-plate", Description: "The third plate of the stack.", Weight: 6, Hidden: true}
-	fourthPlate := Item{Name: "fourth-plate", Description: "The fourth plate of the stack.", Weight: 6, Hidden: true}
-	fifthPlate := Item{Name: "fifth-plate", Description: "The fifth plate of the stack.", Weight: 6, Hidden: true}
-	sixthPlate := Item{Name: "sixth-plate", Description: "The plate at the bottom of the stack.", Weight: 6, Hidden: true}
-	terminal := Entity{Name: "terminal", Description: "A sleek terminal sits on the desk, its screen displaying lines of code and system commands.\nThe keyboard, slightly worn, hints at frequent use.\nThis device is essential for executing tasks and accessing the building's network.\n\nEnter your commands below or type 'leave' to exit the terminal.\n\n", Hidden: true}
-	dan := Entity{Name: "dan", Description: "Congratulations on making it this far! I must say, I'm genuinely impressed. It appears I'm your final boss — muahahaha!\n...Oh, pardon my theatrics. Now, listen closely: the terminal holds the secret instructions to escape the building.\nYou only need two commands to access them.\nLook around the building to find some clues...\nYes, I know, this is actually the easiest task so far. If I am being totally honest, we just want to be done by 4pm...\nWhat are you standing there for? Get to it!\n", Hidden: true}
-	cd := Item{Name: "cd", Description: "A compact disc with '\\secret-files' written on it in bold letters.\nIt almost seems to call out to you, hinting at hidden knowledge.", Weight: 1, Hidden: false}
-	cat := Entity{Name: "cat", Description: "On one of the chairs, a fluffy cat lounges lazily, wearing a collar with a name tag that reads 'unlock-exits-instructions.txt'\n\nAn odd name for a cat. You get the feeling that this feline is more than it seems, possibly guarding crucial information", Hidden: false}
+	staffRoom.Items["tea"] = &Item{Name: "tea", Description: "A steaming cup of Yorkshire tea, rich and comforting.", Weight: 2, Hidden: true}
+	staffRoom.Items["lanyard"] = &Item{Name: "lanyard", Description: "Your lanyard, a key to unlocking any door within the building.", Weight: 1, Hidden: true}
+	staffRoom.Items["abandoned-lanyard"] = &Item{Name: "abandoned-lanyard", Description: "An abandoned lanyard, a key to unlocking any door within the building.", Weight: 1, Hidden: true}
+	codingLab.Items["first-plate"] = &Item{Name: "first-plate", Description: "The plate on top of the stack.", Weight: 6, Hidden: true}
+	codingLab.Items["second-plate"] = &Item{Name: "second-plate", Description: "The second plate of the stack.", Weight: 6, Hidden: true}
+	codingLab.Items["third-plate"] = &Item{Name: "third-plate", Description: "The third plate of the stack.", Weight: 6, Hidden: true}
+	codingLab.Items["fourth-plate"] = &Item{Name: "fourth-plate", Description: "The fourth plate of the stack.", Weight: 6, Hidden: true}
+	codingLab.Items["fifth-plate"] = &Item{Name: "fifth-plate", Description: "The fifth plate of the stack.", Weight: 6, Hidden: true}
+	codingLab.Items["sixth-plate"] = &Item{Name: "sixth-plate", Description: "The plate at the bottom of the stack.", Weight: 6, Hidden: true}
+	codingLab.Items["cd"] = &Item{Name: "cd", Description: "A compact disc with '\\secret-files' written on it in bold letters.\nIt almost seems to call out to you, hinting at hidden knowledge.", Weight: 1, Hidden: false}
 
-	staffRoom.Items[tea.Name] = &tea
-	staffRoom.Items[lanyard.Name] = &lanyard
-	staffRoom.Items[abandonedLanyard.Name] = &abandonedLanyard
-	staffRoom.Entities[rosie.Name] = &rosie
-	staffRoom.Entities[kettle.Name] = &kettle
-	staffRoom.Entities[sofa.Name] = &sofa
-	staffRoom.Entities[dishwasher.Name] = &dishwasher
-	staffRoom.Entities[cat.Name] = &cat
-	codingLab.Items[cd.Name] = &cd
-	codingLab.Entities[computer.Name] = &computer
-	codingLab.Entities[alan.Name] = &alan
-	codingLab.Entities[agileManifesto.Name] = &agileManifesto
-	codingLab.Entities[desk.Name] = &desk
-	codingLab.Items[firstPlate.Name] = &firstPlate
-	codingLab.Items[secondPlate.Name] = &secondPlate
-	codingLab.Items[thirdPlate.Name] = &thirdPlate
-	codingLab.Items[fourthPlate.Name] = &fourthPlate
-	codingLab.Items[fifthPlate.Name] = &fifthPlate
-	codingLab.Items[sixthPlate.Name] = &sixthPlate
-	terminalRoom.Entities[terminal.Name] = &terminal
-	terminalRoom.Entities[dan.Name] = &dan
+	staffRoom.Entities["rosie"] = &Entity{Name: "rosie", Description: "Ugh, what? Sorry, I can't think straight without a brew. Get me some tea, and then we'll talk...", Hidden: false}
+	staffRoom.Entities["kettle"] = &Entity{Name: "kettle", Description: "You set the kettle to boil, brewing the strongest cup of tea you've ever made. A comforting aroma fills the room as the tea is now ready.\n\n(tea can now be found in the room)\n", Hidden: false}
+	staffRoom.Entities["sofa"] = &Entity{Name: "sofa", Description: "You come across one of your fellow academy students fast asleep on the sofa. Next to them, their lanyard lies carelessly within reach.\nYou know you shouldn't take it, but the temptation lingers...\n\n(abandoned-lanyard can now be found in the room)\n", Hidden: false}
+	staffRoom.Entities["dishwasher"] = &Entity{Name: "dishwasher", Description: "A stainless steel dishwasher sits quietly in the corner, its door slightly ajar.\nThe faint scent of soap lingers, and the racks inside are half-empty, waiting for the next load of dirty dishes to be placed inside.\nIt hums faintly, as if anticipating the task it was built for.", Hidden: true}
+	staffRoom.Entities["cat"] = &Entity{Name: "cat", Description: "On one of the chairs, a fluffy cat lounges lazily, wearing a collar with a name tag that reads 'unlock-exits-instructions.txt'\n\nAn odd name for a cat. You get the feeling that this feline is more than it seems, possibly guarding crucial information", Hidden: false}
+	codingLab.Entities["computer"] = &Entity{Name: "computer", Description: "Alan's computer. You need the password to get in.\n\nRemaining attempts: 10.\n\nType 'leave' to stop entering the password.\n\nEnter the password:\n", Hidden: false}
+	codingLab.Entities["alan"] = &Entity{Name: "alan", Description: "Oh, you've finally made it... What are you waiting for, crack on with the code. The computer is right there...\nWhat's that? You don't know the password? Hmm... I seem to have forgotten it myself, but I do recall it's nine letters long.\nAnd for the love of all that's good, it's definitely not 'waterfall'!", Hidden: false}
+	codingLab.Entities["agile-manifesto"] = &Entity{Name: "agile-manifesto", Description: "A large, framed document hangs prominently on the wall, its edges slightly frayed\nYou can almost feel the energy of past brainstorming sessions in the air as you read the four key values:\n\nIndividuals and Interactions over processes and tools.\n\nWorking Software over comprehensive documentation.\n\nCustomer Collaboration over contract negotiation.\n\nResponding To Change over following a plan.\n", Hidden: false}
+	codingLab.Entities["desk"] = &Entity{Name: "desk", Description: "You approach the desk and spot a messy pile of dirty plates, stacked haphazardly. You think to yourself that somebody was too lazy to load the dishwasher.\nThe stack is too heavy to carry all the plates at once, and taking plates from the centre or bottom of the stack could pose a risk...\n\n(stack of plates can now be found in the room)\n\n", Hidden: true}
+	terminalRoom.Entities["terminal"] = &Entity{Name: "terminal", Description: "A sleek terminal sits on the desk, its screen displaying lines of code and system commands.\nThe keyboard, slightly worn, hints at frequent use.\nThis device is essential for executing tasks and accessing the building's network.\n\nEnter your commands below or type 'leave' to exit the terminal.\n\n", Hidden: true}
+	terminalRoom.Entities["dan"] = &Entity{Name: "dan", Description: "Congratulations on making it this far! I must say, I'm genuinely impressed. It appears I'm your final boss — muahahaha!\n...Oh, pardon my theatrics. Now, listen closely: the terminal holds the secret instructions to escape the building.\nYou only need two commands to access them.\nLook around the building to find some clues...\nYes, I know, this is actually the easiest task so far. If I am being totally honest, we just want to be done by 4pm...\nWhat are you standing there for? Get to it!\n", Hidden: true}
 
-	isAttemptingPassword := false
+	isAttemptingPassword = false
 
-	isAttemptingTerminal := false
+	isAttemptingTerminal = false
 
-	IsFirstCommand := false
+	IsFirstCommand = false
 
-	player := Player{
-		CurrentRoom:     &staffRoom,
+	player = &Player{
+		CurrentRoom:     staffRoom,
 		Inventory:       make(map[string]*Item),
 		AvailableWeight: 20,
 		CurrentEntity:   nil,
 	}
 
+}
+
+func main() {
+
+	setupGame()
+
+	abandonedLanyard := staffRoom.Items["abandoned-lanyard"]
+	tea := staffRoom.Items["tea"]
+	lanyard := staffRoom.Items["lanyard"]
+	firstPlate := codingLab.Items["first-plate"]
+	secondPlate := codingLab.Items["second-plate"]
+	thirdPlate := codingLab.Items["third-plate"]
+	fourthPlate := codingLab.Items["fourth-plate"]
+	fifthPlate := codingLab.Items["fifth-plate"]
+	sixthPlate := codingLab.Items["sixth-plate"]
+
+	sofa := staffRoom.Entities["sofa"]
+	terminal := terminalRoom.Entities["terminal"]
+	computer := codingLab.Entities["computer"]
+	kettle := staffRoom.Entities["kettle"]
+	dishwasher := staffRoom.Entities["dishwasher"]
+	desk := codingLab.Entities["desk"]
+	alan := codingLab.Entities["alan"]
+	dan := terminalRoom.Entities["dan"]
+	rosie := staffRoom.Entities["rosie"]
+	// agileManifesto := codingLab.Entities["agile-manifesto"]
+	// cd := codingLab.Items["cd"]
+	// cat := staffRoom.Entities["cat"]
+
 	scanner := bufio.NewScanner(os.Stdin)
-
 	for {
-
 		if player.CurrentEntity != nil && player.CurrentEntity.Name == "sofa" {
 			abandonedLanyard.Hidden = false
 			sofa.SetDescription("Your fellow academy student continues to sleep on the sofa. Something tells you it's down to you to get stuff done today...")
