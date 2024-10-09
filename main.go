@@ -20,18 +20,6 @@ func clearScreen() {
     cmd.Run()
 }
 
-type Describable interface {
-	SetDescription(description string)
-	GetDescription() string
-}
-
-type Item struct {
-	Name string
-	Description string
-	Weight int
-	Hidden bool
-}
-
 func (i *Item) SetDescription(description string) {
     i.Description = description
 }
@@ -40,46 +28,12 @@ func (i *Item) GetDescription() string {
     return i.Description
 }
 
-type Room struct {
-	Name string
-	Description string
-	Exits map[string]*Room
-	Items map[string]*Item
-	Entities map[string]*Entity
-}
-
 func (r *Room) SetDescription(description string) {
     r.Description = description
 }
 
 func (r *Room) GetDescription() string {
     return r.Description
-}
-
-type Player struct {
-	CurrentRoom *Room
-	Inventory   map[string]*Item
-	CurrentEntity *Entity
-	CarriedWeight int
-	AvailableWeight int
-}
-
-type Entity struct {
-	Name string
-	Description string
-	Hidden bool
-}
-
-type Event struct {
-	Description string
-	Outcome string
-	Triggered bool
-}
-
-type Interaction struct {
-	ItemName string
-	EntityName string
-	Event *Event
 }
 
 var validInteractions = []*Interaction{}
