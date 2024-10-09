@@ -619,9 +619,9 @@ func TestUpdateDescription(t *testing.T) {
     newDescription := "This is the second description"
     
     //Act
-    updateDescription(room, newDescription)
-    updateDescription(item, newDescription)
-    updateDescription(entity, newDescription)
+    room.SetDescription(newDescription)
+    item.SetDescription(newDescription)
+    entity.SetDescription(newDescription)
 
     //Assert
     if room.GetDescription() != newDescription {
