@@ -173,10 +173,10 @@ func (p *Player) ChangeCarriedWeight(item *Item, operation string) {
 	}
 }
 
-func (p *Player) Drop(itemName string) {
+func (p *Player) Drop(itemName string, d Display) {
 	if item, ok := p.Inventory[itemName]; ok {
 		if isPlate(itemName) {
-			println("You can't just leave those plates lying around! It's time to load them into the dishwasher!")
+			d.Show("You can't just leave those plates lying around! It's time to load them into the dishwasher!")
 			return
 		}
 
@@ -184,9 +184,9 @@ func (p *Player) Drop(itemName string) {
 		p.ChangeCarriedWeight(item, "decrease")
 		p.CurrentRoom.Items[item.Name] = item
 
-		fmt.Printf("You dropped %s.\n", item.Name)
+		d.Show(fmt.Sprintf("You dropped %s.\n\n", item.Name))
 	} else {
-		fmt.Printf("You don't have %s.\n", itemName)
+		d.Show(fmt.Sprintf("You don't have %s.\n\n", itemName))
 	}
 }
 
@@ -629,7 +629,7 @@ func main() {
 			case "drop":
 				clearScreen()
 				if len(args) > 0 {
-					player.Drop(args[0])
+					player.Drop(args[0], ConsoleDisplay{})
 				} else {
 					fmt.Println("Specify an item to drop.")
 				}
