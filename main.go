@@ -102,16 +102,16 @@ func (e *Entity) GetDescription() string {
     return e.Description
 }
 
-func (p *Player) Move(direction string) {
+func (p *Player) Move(direction string, d Display) {
 	if p.CurrentEntity != nil {
 		p.CurrentEntity = nil
 	}
 	if newRoom, ok := p.CurrentRoom.Exits[direction]; ok {
 		p.CurrentRoom = newRoom
 
-		fmt.Printf("You are in %s\n", p.CurrentRoom.Name)
+		d.Show(fmt.Sprintf("You are in %s\n", p.CurrentRoom.Name))
 	} else {
-		fmt.Println("You can't go that way!")
+		d.Show("You can't go that way!\n")
 	}
 }
 
@@ -671,7 +671,7 @@ func main() {
 				clearScreen()
 				if _, ok := player.Inventory["lanyard"]; ok {
 					if len(args) > 0 {
-						player.Move(args[0])
+						player.Move(args[0], ConsoleDisplay{})
 					} else {
 						fmt.Println("Specify a direction to move (e.g., north).")
 					}

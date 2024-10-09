@@ -39,14 +39,22 @@ func TestPlayerCanMoveToAvailableRoom(t *testing.T) {
 
     player := Player{CurrentRoom: &room1}
 
+	mockDisplay := &MockDisplay{}
+
     // Act
-    player.Move("north")
+    player.Move("north", mockDisplay)
 
     // Assert
+	output := strings.Join(mockDisplay.Output, "")
 	expectedRoom := "Room 2"
+	expectedOutput := fmt.Sprintf("You are in %s\n", player.CurrentRoom.Name)
+
     if player.CurrentRoom.Name != expectedRoom {
         t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
     }
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	}
 }
 
 func TestPlayerCannotMoveToUnavailableRoom(t *testing.T) {
@@ -58,14 +66,22 @@ func TestPlayerCannotMoveToUnavailableRoom(t *testing.T) {
 
 	player := Player{CurrentRoom: &room1}
 
+	mockDisplay := MockDisplay{}
+
 	//Act
-	player.Move("east")
+	player.Move("east", &mockDisplay)
 
 	//Assert
+	output := strings.Join(mockDisplay.Output, "")
+	expectedOutput := fmt.Sprintln("You can't go that way!")
 	expectedRoom := "Room 1"
+
     if player.CurrentRoom.Name != expectedRoom {
         t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
     }
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	}
 }
 
 func TestTakeItem(t *testing.T) {
@@ -185,9 +201,11 @@ func TestDropAbsentItem(t *testing.T) {
 	room1.Items[item.Name] = &item
 	
 	player := Player{CurrentRoom: &room1, Inventory: make(map[string]*Item)}
+
+	mockDisplay := &MockDisplay{}
 	
 	//Act
-	player.Move("north")
+	player.Move("north", mockDisplay)
 
 	player.Drop(item.Name)
 
@@ -559,9 +577,11 @@ func TestPlayerMoveDisengageEntity(t *testing.T) {
 	room1.Entities[entity.Name] = &entity
 	player := Player{CurrentRoom: &room1, CurrentEntity: nil}
 
+	mockDisplay := &MockDisplay{}
+
 	//Act
 	player.Approach(entity.Name)
-	player.Move("north")
+	player.Move("north", mockDisplay)
 
 	//Assert
 	if player.CurrentEntity != nil {
