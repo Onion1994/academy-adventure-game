@@ -286,29 +286,44 @@ func (p *Player) ShowMap(d Display) {
 }
 
 func (p *Player) Use(itemName string, target string, d Display) {
+
 	if p.CurrentEntity == nil {
 		d.Show("Approach to use an item.\n")
 		return
-	}	
-	if p.CurrentEntity.Name == target {
-		if _, ok := p.Inventory[itemName]; ok {
-				for _, interaction := range validInteractions {
-					if interaction.ItemName == itemName && interaction.EntityName == target {
-						p.TriggerEvent(interaction.Event)
-						p.ChangeCarriedWeight(p.Inventory[itemName], "decrease")
-						delete(p.Inventory, itemName)
-						return
-					}
-				}
-		} else {
-			d.Show(fmt.Sprintf("You don't have %s.\n", itemName))
-			return
-		}
-	} else {
+	}
+
+	if p.CurrentEntity.Name != target {
 		d.Show(fmt.Sprintf("%s not found.\n", target))
 		return
 	}
+
+	if itemIsNotInInventory(p, itemName) {
+		d.Show(fmt.Sprintf("You don't have %s.\n", itemName))
+		return
+	}
+	
+	for _, interaction := range validInteractions {
+		if interactionIsValid(interaction, itemName, target) {
+			handleInteraction(p, interaction, itemName)
+			return
+		} 
+	}
 	d.Show(fmt.Sprintf("You can't use %s on %s.\n", itemName, target))
+}
+
+
+func itemIsNotInInventory(p *Player, itemName string) bool {
+	_, ok := p.Inventory[itemName]
+    return !ok
+}
+func interactionIsValid(interaction *Interaction, itemName string, target string) bool {
+	return interaction.ItemName == itemName && interaction.EntityName == target
+}
+
+func handleInteraction(p *Player, interaction *Interaction, itemName string) {
+	p.TriggerEvent(interaction.Event)
+	p.ChangeCarriedWeight(p.Inventory[itemName], "decrease")
+	delete(p.Inventory, itemName)
 }
 
 func (p *Player) TriggerEvent(event *Event) {
