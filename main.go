@@ -257,16 +257,16 @@ func (p *Player) EntitiesArePresent() bool {
 }
 
 
-func (p *Player) Approach(entityName string) {
+func (p *Player) Approach(entityName string, d Display) {
 	if p.CurrentEntity != nil {
 		p.CurrentEntity = nil
 	}
 	if entity, ok := p.CurrentRoom.Entities[entityName]; ok && !entity.Hidden{
 
 		p.CurrentEntity = entity
-		fmt.Println(entity.Description)
+		d.Show(entity.Description)
 	} else {
-		fmt.Printf("You can't approach %s.\n", entityName)
+		d.Show(fmt.Sprintf("You can't approach %s.\n", entityName))
 	}
 }
 
@@ -285,9 +285,9 @@ func (p *Player) ShowMap(d Display) {
 	}
 }
 
-func (p *Player) Use(itemName string, target string) {
+func (p *Player) Use(itemName string, target string, d Display) {
 	if p.CurrentEntity == nil {
-		fmt.Println("Approach to use an item.")
+		d.Show("Approach to use an item.\n")
 		return
 	}	
 	if p.CurrentEntity.Name == target {
@@ -301,14 +301,14 @@ func (p *Player) Use(itemName string, target string) {
 					}
 				}
 		} else {
-			fmt.Printf("You don't have %s.\n", itemName)
+			d.Show(fmt.Sprintf("You don't have %s.\n", itemName))
 			return
 		}
 	} else {
-		fmt.Printf("%s not found.\n", target)
+		d.Show(fmt.Sprintf("%s not found.\n", target))
 		return
 	}
-	fmt.Printf("You can't use %s on %s.\n", itemName, target)
+	d.Show(fmt.Sprintf("You can't use %s on %s.\n", itemName, target))
 }
 
 func (p *Player) TriggerEvent(event *Event) {
@@ -639,7 +639,7 @@ func main() {
 			case "approach":
 				clearScreen()
 				if len(args) > 0 {
-					player.Approach(args[0])
+					player.Approach(args[0], ConsoleDisplay{})
 
 					if !unlockComputer.Triggered {
 						if player.CurrentEntity != nil && player.CurrentEntity.Name == "computer" {
@@ -657,9 +657,9 @@ func main() {
 				clearScreen()
 				if len(args) > 0 {
 					if player.CurrentEntity == nil {
-						player.Use(args[0], "unspecified_entity")
+						player.Use(args[0], "unspecified_entity", ConsoleDisplay{})
 					} else {
-						player.Use(args[0], player.CurrentEntity.Name)
+						player.Use(args[0], player.CurrentEntity.Name, ConsoleDisplay{})
 					}
 				} else {
 					fmt.Println("Specify an item to use.")

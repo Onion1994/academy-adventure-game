@@ -194,7 +194,7 @@ func TestCannotTakeHiddenItem(t *testing.T) {
 	}
 }
 
-func TestDropItemFromInventoryIntoRoom(t *testing.T) {
+func TestCanDropItemFromInventoryIntoRoom(t *testing.T) {
 	//Arrange
 	room := Room{Items: make(map[string]*Item)}
 	
@@ -389,7 +389,7 @@ func TestShowRoomEngagedEntity(t *testing.T) {
 	}
 }
 
-func TestShowHiddenItems(t *testing.T) {
+func TestShouldNotShowHiddenItems(t *testing.T) {
 	// Arrange
 	room := Room{Name: "Room 1", Description: "This is room 1.", Items: make(map[string]*Item), Entities: make(map[string]*Entity)}
 	entity := Entity{Name: "Entity", Description: "This is Entity", Hidden: false}
@@ -419,7 +419,7 @@ func TestShowHiddenItems(t *testing.T) {
 	}
 }
 
-func TestNotShowHiddenEntities(t *testing.T) {
+func TestShouldNotShowHiddenEntities(t *testing.T) {
 	// Arrange
 	room := Room{Name: "Room 1", Description: "This is room 1.", Items: make(map[string]*Item), Entities: make(map[string]*Entity)}
 	entity := Entity{Name: "Entity", Description: "This is Entity", Hidden: true}
@@ -451,7 +451,7 @@ func TestNotShowHiddenEntities(t *testing.T) {
 	}
 }
 
-func TestItemWeight(t *testing.T) {
+func TestExpectedCarriedWeight(t *testing.T) {
 	//Arrange
 	room := Room{Items: make(map[string]*Item)}
 	item1 := Item{Name: "Item", Weight: 5}
@@ -479,7 +479,7 @@ func TestItemWeight(t *testing.T) {
 	}
 }
 
-func TestAvailableWeight(t *testing.T) {
+func TestExpectedAvailableAndCarriedWeight(t *testing.T) {
 	//Arrange
 	room := Room{Items: make(map[string]*Item)}
 	item1 := Item{Name: "Item", Weight: 5}
@@ -513,26 +513,34 @@ func TestAvailableWeight(t *testing.T) {
 	}
 }
 
-func TestApproachEntity(t* testing.T) {
+func TestShouldApproachPresentEntity(t* testing.T) {
 	//Arrange
 	room := Room{Name: "Room", Description: "This is a room.", Entities: make(map[string]*Entity)}
 	entity := Entity{Name: "Entity", Description: "This is an entity"}
 	room.Entities[entity.Name] = &entity
 	player := Player{CurrentRoom: &room}
+	mockDisplay := &MockDisplay{}
 
 	//Act
-	player.Approach(entity.Name)
+	player.Approach(entity.Name, mockDisplay)
 
 	//Assert
-	expectedOutput :=  entity.Name
-	output := player.CurrentEntity.Name
+	expectedCurrentEntity :=  entity.Name
+	actualCurrentEntity := player.CurrentEntity.Name
+
+	expectedOutput := player.CurrentEntity.Description
+	output := strings.Join(mockDisplay.Output, "")
+
+	if actualCurrentEntity != expectedCurrentEntity {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedCurrentEntity, actualCurrentEntity)
+	}
 
 	if expectedOutput != output {
 		t.Errorf("Expected %s, got %s", expectedOutput, output)
 	}
 }
 
-func TestApproachAbsentEntity(t* testing.T) {
+func TestShouldNotApproachAbsentEntity(t* testing.T) {
 	//Arrange
 	room1 := Room{Name: "Room 1", Entities: make(map[string]*Entity)}
 	room2 := Room{Entities: make(map[string]*Entity)}
@@ -540,43 +548,67 @@ func TestApproachAbsentEntity(t* testing.T) {
 	room2.Entities[entity.Name] = &entity
 	player := Player{CurrentRoom: &room1}
 
+	mockDisplay := &MockDisplay{}
+
 	//Act
-	player.Approach(entity.Name)
+	player.Approach(entity.Name, mockDisplay)
 
 	//Assert
+	expectedOutput := fmt.Sprintf("You can't approach %s.\n", entity.Name)
+	output := strings.Join(mockDisplay.Output, "")
+
 	if player.CurrentEntity != nil {
         t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
     }
+	if expectedOutput != output {
+		t.Errorf("Expected %s, got %s", expectedOutput, output)
+	}
 }
 
-func TestApproachNonexistentEntity(t* testing.T) {
+func TestShouldNotApproachNonexistentEntity(t* testing.T) {
 	//Arrange
 	room1 := Room{Name: "Room 1", Entities: make(map[string]*Entity)}
 	player := Player{CurrentRoom: &room1}
 
+	mockDisplay := &MockDisplay{}
+
 	//Act
-	player.Approach("Entity")
+	player.Approach("Entity", mockDisplay)
 
 	//Assert
+	expectedOutput := "You can't approach Entity.\n"
+	output := strings.Join(mockDisplay.Output, "")
+
 	if player.CurrentEntity != nil {
         t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
     }
+	if expectedOutput != output {
+		t.Errorf("Expected %s, got %s", expectedOutput, output)
+	}
 }
 
-func TestApproachHiddenEntity(t* testing.T) {
+func TestShouldNotApproachHiddenEntity(t* testing.T) {
 	//Arrange
 	room := Room{Name: "Room 1", Entities: make(map[string]*Entity)}
 	entity := Entity{Name: "Entity", Description: "This is an entity", Hidden: true}
 	room.Entities[entity.Name] = &entity
 	player := Player{CurrentRoom: &room}
 
+	mockDisplay := &MockDisplay{}
+
 	//Act
-	player.Approach(entity.Name)
+	player.Approach(entity.Name, mockDisplay)
 
 	//Assert
+	expectedOutput := fmt.Sprintf("You can't approach %s.\n", entity.Name)
+	output := strings.Join(mockDisplay.Output, "")
+
 	if player.CurrentEntity != nil {
         t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
     }
+	if expectedOutput != output {
+		t.Errorf("Expected %s, got %s", expectedOutput, output)
+	}
 }
 
 func TestUpdateDescription(t *testing.T) {
@@ -603,15 +635,17 @@ func TestUpdateDescription(t *testing.T) {
     }
 }
 
-func TestDisengageEntity(t *testing.T) {
+func TestShouldDisengageEntity(t *testing.T) {
 	//Arrange
 	room := Room{Name: "Room", Description: "This is a room.", Entities: make(map[string]*Entity)}
 	entity := Entity{Name: "Entity", Description: "This is an entity"}
 	room.Entities[entity.Name] = &entity
 	player := Player{CurrentRoom: &room}
 
+	mockDisplay := &MockDisplay{}
+
 	//Act
-	player.Approach(entity.Name)
+	player.Approach(entity.Name, mockDisplay)
 	player.Leave()
 
 	if player.CurrentEntity != nil {
@@ -619,7 +653,7 @@ func TestDisengageEntity(t *testing.T) {
     }
 }
 
-func TestPlayerMoveDisengageEntity(t *testing.T) {
+func TestPlayerMoveShouldDisengageEntity(t *testing.T) {
 	//Arrange
 	room1 := Room{Name: "Room 1", Description: "This is room 1.", Exits: make(map[string]*Room), Entities: make(map[string]*Entity)}
     room2 := Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*Room), Entities: make(map[string]*Entity)}
@@ -634,7 +668,7 @@ func TestPlayerMoveDisengageEntity(t *testing.T) {
 	mockDisplay := &MockDisplay{}
 
 	//Act
-	player.Approach(entity.Name)
+	player.Approach(entity.Name, mockDisplay)
 	player.Move("north", mockDisplay)
 
 	//Assert
@@ -643,7 +677,7 @@ func TestPlayerMoveDisengageEntity(t *testing.T) {
 	}
 }
 
-func TestEngagedPlayerCannotEngageOtherEntities(t *testing.T) {
+func TestNewEngagementShouldCancelFormer(t *testing.T) {
 	//Arrange
 	room := Room{Name: "Room", Description: "This is a room.", Exits: make(map[string]*Room), Entities: make(map[string]*Entity)}
 
@@ -654,9 +688,11 @@ func TestEngagedPlayerCannotEngageOtherEntities(t *testing.T) {
 	room.Entities[entity2.Name] = &entity2
 	player := Player{CurrentRoom: &room}
 
+	mockDisplay := &MockDisplay{}
+
 	//Act
-	player.Approach(entity1.Name)
-	player.Approach(entity2.Name)
+	player.Approach(entity1.Name, mockDisplay)
+	player.Approach(entity2.Name, mockDisplay)
 
 	//Assert
 	if player.CurrentEntity.Name != entity2.Name {
@@ -696,13 +732,13 @@ func TestValidUseItem(t *testing.T) {
 	key := Item{Name: "key", Weight: 1}
 	door := Entity{Name: "door"}
 	room.Entities[door.Name] = &door
-	room.Items[key.Name] = &key
-	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
+	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30, CurrentEntity: nil}
+	player.Inventory["key"] = &key
+	player.CurrentEntity = &door
 	mockDisplay := &MockDisplay{}
 	//Act
-	player.Take("key", mockDisplay)
-	player.Approach("door")
-	player.Use("key", "door")
+
+	player.Use("key", "door", mockDisplay)
 
 	//Assert
 	if !validInteractions[0].Event.Triggered {
@@ -731,10 +767,11 @@ func TestInvalidUseItem(t *testing.T) {
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item)}
 	player.Inventory[key.Name] = &key
 	
-	//Act
+	mockDisplay := &MockDisplay{}
 
-	player.Approach("plant")
-	player.Use("key", "plant")
+	//Act
+	player.Approach("plant", mockDisplay)
+	player.Use("key", "plant", mockDisplay)
 
 	//Assert
 	for _, validInteraction := range validInteractions {
@@ -742,9 +779,17 @@ func TestInvalidUseItem(t *testing.T) {
 			t.Errorf("Expected event to be false for triggered, got true")
 		}
 	}
+
+	output := strings.Join(mockDisplay.Output, "")
+
+	expectedOutput := fmt.Sprintf("You can't use %s on %s.\n", key.Name, plant.Name)
+
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	}
 }
 
-func TestUseAbsentItem(t *testing.T) {
+func TestCannotUseAbsentItem(t *testing.T) {
 	//Arrange
 	setUpValidInteractions()
 	room := Room{Items: make(map[string]*Item), Entities: make(map[string]*Entity)}
@@ -754,18 +799,27 @@ func TestUseAbsentItem(t *testing.T) {
 	room.Items[key.Name] = &key
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item)}
 	
-	//Act
+	mockDisplay := &MockDisplay{}
 
-	player.Approach("door")
-	player.Use("key", "door")
+	//Act
+	player.Approach("door", mockDisplay)
+	player.Use("key", "door", mockDisplay)
 
 	//Assert
 	if validInteractions[0].Event.Triggered {
 		t.Errorf("Expected event to be false for triggered, got true")
 	}
+
+	output := strings.Join(mockDisplay.Output, "")
+
+	expectedOutput := fmt.Sprintf("You don't have %s.\n", key.Name)
+
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	}
 }
 
-func TestUseAbsentEntity(t *testing.T) {
+func TestCannotUseOnAbsentEntity(t *testing.T) {
 	//Arrange
 	setUpValidInteractions()
 	room := Room{Items: make(map[string]*Item), Entities: make(map[string]*Entity)}
@@ -774,15 +828,22 @@ func TestUseAbsentEntity(t *testing.T) {
 	room.Entities[door.Name] = &door
 	room.Items[key.Name] = &key
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), CurrentEntity: nil}
+	player.Inventory["key"] = &key
 	mockDisplay := &MockDisplay{}
 	//Act
 
-	player.Take("key", mockDisplay)
-	player.Use("key", "door")
+	player.Use("key", "door", mockDisplay)
 
 	//Assert
 	if validInteractions[0].Event.Triggered {
 		t.Errorf("Expected event to be false for triggered, got true")
+	}
+	output := strings.Join(mockDisplay.Output, "")
+
+	expectedOutput := "Approach to use an item.\n"
+
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
 	}
 }
 
