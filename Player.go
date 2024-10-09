@@ -114,7 +114,7 @@ func (p *Player) ShowRoom(d Display) {
 			d.Show("\nYou can approach:\n")
 			for _, entity := range p.CurrentRoom.Entities {
 				switch {
-				case p.CurrentEntity != nil:
+				case p.PlayerIsEngaged():
 					if entity.Name == p.CurrentEntity.Name {
 						d.Show(fmt.Sprintf("- %s (currently approached)\n", entity.Name))
 					} else if !entity.Hidden{
@@ -138,7 +138,10 @@ func (p *Player) ShowRoom(d Display) {
 		}
 	}
 
-	
+
+func (p *Player) PlayerIsEngaged() bool {
+	return p.CurrentEntity != nil
+}
 
 func (p *Player) ItemsArePresent() bool {
 	if len(p.CurrentRoom.Items) != 0 {
