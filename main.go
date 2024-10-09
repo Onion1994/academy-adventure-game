@@ -120,14 +120,14 @@ var currentPlateIndex = 0
 var gameOver = false
 
 
-func (p *Player) Take(itemName string) {
+func (p *Player) Take(itemName string, d Display) {
 	item, ok := p.CurrentRoom.Items[itemName]
 	switch {
 	case !ok || item.Hidden:
-		fmt.Printf("You can't take %s\n", itemName)
+		d.Show(fmt.Sprintf("You can't take %s\n", itemName))
 		return
 	case p.AvailableWeight < item.Weight:
-		fmt.Println("Weight limit reached! Please drop an item before taking more.")
+		d.Show(fmt.Sprintln("Weight limit reached! Please drop an item before taking more."))
 		return
 	case isPlate(itemName):
 		if itemName == plateOrder[currentPlateIndex] {
@@ -136,9 +136,9 @@ func (p *Player) Take(itemName string) {
 			delete(p.CurrentRoom.Items, item.Name)
 			currentPlateIndex++
 
-			fmt.Printf("%s has been added to your inventory.\n", item.Name)
+			d.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
 		} else {
-			fmt.Println("As you attempt to grab the greasy plates without removing the ones stacked above them, they slip from your grasp and shatter, creating a chaotic mess.\n\nNow Rosie is very grumpy.")
+			d.Show(fmt.Sprintln("As you attempt to grab the greasy plates without removing the ones stacked above them, they slip from your grasp and shatter, creating a chaotic mess.\n\nNow Rosie is very grumpy."))
 			gameOver = true
 		}
 		
@@ -147,7 +147,7 @@ func (p *Player) Take(itemName string) {
 		p.ChangeCarriedWeight(item, "increase")
 		delete(p.CurrentRoom.Items, item.Name)
 
-		fmt.Printf("%s has been added to your inventory.\n", item.Name)
+		d.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
 	}
 }
 
@@ -622,7 +622,7 @@ func main() {
 			case "take":
 				clearScreen()
 				if len(args) > 0 {
-					player.Take(args[0])
+					player.Take(args[0], ConsoleDisplay{})
 				} else {
 					fmt.Println("Specify an item to take.")
 				}

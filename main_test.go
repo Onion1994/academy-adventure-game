@@ -84,7 +84,7 @@ func TestPlayerCannotMoveToUnavailableRoom(t *testing.T) {
 	}
 }
 
-func TestTakeItem(t *testing.T) {
+func TestTakeItemIfAvailable(t *testing.T) {
 	//Arrange
 	room := Room{Items: make(map[string]*Item)}
 	
@@ -93,12 +93,16 @@ func TestTakeItem(t *testing.T) {
 	room.Items[item.Name] = &item
 	
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item)}
+
+	mockDisplay := &MockDisplay{}
 	
 	//Act
-	player.Take(item.Name)
-
+	player.Take(item.Name, mockDisplay)
 
 	//Assert
+	output := strings.Join(mockDisplay.Output, "")
+	expectedOutput := fmt.Sprintf("%s has been added to your inventory.\n", item.Name)
+
 	if _, ok := player.Inventory[item.Name]; !ok {
 		t.Errorf("Expected true for item present in the inventory, got false")
 	}
@@ -106,9 +110,13 @@ func TestTakeItem(t *testing.T) {
 	if _, ok := room.Items[item.Name]; ok {
 		t.Errorf("Expected false for item missing from the room, got true")
 	}
+
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	}
 }
 
-func TestTakeAbsentItem(t *testing.T) {
+func TestCannotTakeAbsentItem(t *testing.T) {
 	//Arrange
 	room1 := Room{Items: make(map[string]*Item)}
 	room2 := Room{Items: make(map[string]*Item)}
@@ -119,33 +127,47 @@ func TestTakeAbsentItem(t *testing.T) {
 	
 	player := Player{CurrentRoom: &room2, Inventory: make(map[string]*Item),  CarriedWeight: 0, AvailableWeight: 30}
 	
+	mockDisplay := &MockDisplay{}
+	
 	//Act
-	player.Take(item.Name)
-
+	player.Take(item.Name, mockDisplay)
 
 	//Assert
+	output := strings.Join(mockDisplay.Output, "")
+	expectedOutput := fmt.Sprintf("You can't take %s\n", item.Name)
+
 	if _, ok := player.Inventory[item.Name]; ok {
 		t.Errorf("Expected false for picking up absent item, got true")
 	}
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	}
 }
 
-func TestTakeNonexistentItem(t *testing.T) {
+func TestCannotTakeNonexistentItem(t *testing.T) {
 	//Arrange
 	room2 := Room{Items: make(map[string]*Item)}
 
 	player := Player{CurrentRoom: &room2, Inventory: make(map[string]*Item), CarriedWeight: 0, AvailableWeight: 30}
 	
+	mockDisplay := &MockDisplay{}
+	
 	//Act
-	player.Take("Item")
-
+	player.Take("item", mockDisplay)
 
 	//Assert
+	output := strings.Join(mockDisplay.Output, "")
+	expectedOutput := fmt.Sprintln("You can't take item")
+
 	if _, ok := player.Inventory["Item"]; ok {
 		t.Errorf("Expected false for picking up nonexistent item, got true")
 	}
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	}
 }
 
-func TestTakeHiddenItem(t *testing.T) {
+func TestCannotTakeHiddenItem(t *testing.T) {
 	//Arrange
 	room := Room{Items: make(map[string]*Item)}
 	
@@ -155,13 +177,20 @@ func TestTakeHiddenItem(t *testing.T) {
 	
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item),  CarriedWeight: 0, AvailableWeight: 30}
 	
+	mockDisplay := &MockDisplay{}
+	
 	//Act
-	player.Take(item.Name)
-
+	player.Take(item.Name, mockDisplay)
 
 	//Assert
+	output := strings.Join(mockDisplay.Output, "")
+	expectedOutput := fmt.Sprintf("You can't take %s\n", item.Name)
+
 	if _, ok := player.Inventory[item.Name]; ok {
 		t.Errorf("Expected false for picking up hidden item, got true")
+	}
+	if output != expectedOutput {
+		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
 	}
 }
 
@@ -175,8 +204,10 @@ func TestDropItem(t *testing.T) {
 	
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item)}
 	
+	mockDisplay := &MockDisplay{}
+	
 	//Act
-	player.Take(item.Name)
+	player.Take(item.Name, mockDisplay)
 
 	player.Drop(item.Name)
 
@@ -241,8 +272,9 @@ func TestShowInventory(t *testing.T) {
 	room.Items[item.Name] = &item
 	
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
-	player.Take(item.Name)
 	mockDisplay := &MockDisplay{}
+	
+	player.Take(item.Name, mockDisplay)
 
 	// Act
 	player.ShowInventory(mockDisplay)
@@ -410,13 +442,15 @@ func TestItemWeight(t *testing.T) {
 	room.Items[item1.Name] = &item1
 	room.Items[item2.Name] = &item2
 	room.Items[item3.Name] = &item3
+	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
+	
+	mockDisplay := &MockDisplay{}
 	
 	//Act
-	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
-	player.Take(item1.Name)
-	player.Take(item2.Name)
+	player.Take(item1.Name, mockDisplay)
+	player.Take(item2.Name, mockDisplay)
 	player.Drop(item2.Name)
-	player.Take(item3.Name)
+	player.Take(item3.Name, mockDisplay)
 
 	//Assert
 	expectedOutput := 20
@@ -436,13 +470,15 @@ func TestAvailableWeight(t *testing.T) {
 	room.Items[item1.Name] = &item1
 	room.Items[item2.Name] = &item2
 	room.Items[item3.Name] = &item3
+	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
+
+	mockDisplay := &MockDisplay{}
 	
 	//Act
-	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
-	player.Take(item1.Name)
+	player.Take(item1.Name, mockDisplay)
 	player.Drop(item1.Name)
-	player.Take(item2.Name)
-	player.Take(item3.Name)
+	player.Take(item2.Name, mockDisplay)
+	player.Take(item3.Name, mockDisplay)
 
 	//Assert
 	expectedCarriedWeight := 16
@@ -644,9 +680,9 @@ func TestValidUseItem(t *testing.T) {
 	room.Entities[door.Name] = &door
 	room.Items[key.Name] = &key
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
-	
+	mockDisplay := &MockDisplay{}
 	//Act
-	player.Take("key")
+	player.Take("key", mockDisplay)
 	player.Approach("door")
 	player.Use("key", "door")
 
@@ -720,10 +756,10 @@ func TestUseAbsentEntity(t *testing.T) {
 	room.Entities[door.Name] = &door
 	room.Items[key.Name] = &key
 	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), CurrentEntity: nil}
-	
+	mockDisplay := &MockDisplay{}
 	//Act
 
-	player.Take("key")
+	player.Take("key", mockDisplay)
 	player.Use("key", "door")
 
 	//Assert
