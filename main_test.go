@@ -30,7 +30,7 @@ func (m *MockDisplay) Show(text string) {
 }
 
 
-func TestPlayerMovement(t *testing.T) {
+func TestPlayerCanMoveToAvailableRoom(t *testing.T) {
 	//Arrange
 	room1 := Room{Name: "Room 1", Description: "This is room 1.", Exits: make(map[string]*Room)}
     room2 := Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*Room)}
@@ -43,12 +43,13 @@ func TestPlayerMovement(t *testing.T) {
     player.Move("north")
 
     // Assert
-    if player.CurrentRoom.Name != "Room 2" {
-        t.Errorf("Expected Room 2, got %s", player.CurrentRoom.Name)
+	expectedRoom := "Room 2"
+    if player.CurrentRoom.Name != expectedRoom {
+        t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
     }
 }
 
-func TestPlayerMovementInvalidDirection(t *testing.T) {
+func TestPlayerCannotMoveToUnavailableRoom(t *testing.T) {
 	//Arrange
 	room1 := Room{Name: "Room 1", Description: "This is room 1.", Exits: make(map[string]*Room)}
 	room2 := Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*Room)}
@@ -61,9 +62,10 @@ func TestPlayerMovementInvalidDirection(t *testing.T) {
 	player.Move("east")
 
 	//Assert
-	if player.CurrentRoom.Name != "Room 1" {
-		t.Errorf("Expected Room1, got %s", player.CurrentRoom.Name)
-	}
+	expectedRoom := "Room 1"
+    if player.CurrentRoom.Name != expectedRoom {
+        t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
+    }
 }
 
 func TestTakeItem(t *testing.T) {
