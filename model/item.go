@@ -1,4 +1,4 @@
-package main
+package model
 
 func (i *Item) SetDescription(description string) {
 	i.Description = description

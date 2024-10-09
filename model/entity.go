@@ -1,4 +1,4 @@
-package main
+package model
 
 func (e *Entity) SetDescription(description string) {
 	e.Description = description

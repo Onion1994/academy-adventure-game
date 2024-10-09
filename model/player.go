@@ -1,8 +1,13 @@
-package main
+package model
 
 import (
 	"fmt"
+	"academy-adventure-game/global"
 )
+
+var plateOrder = []string{"first-plate", "second-plate", "third-plate", "fourth-plate", "fifth-plate", "sixth-plate"}
+var currentPlateIndex = 0
+var ValidInteractions = []*Interaction{}
 
 func (p *Player) Move(direction string) {
 	if p.CurrentEntity != nil {
@@ -36,7 +41,7 @@ func (p *Player) Take(itemName string) {
 			fmt.Printf("%s has been added to your inventory.\n", item.Name)
 		} else {
 			fmt.Println("As you attempt to grab the greasy plates without removing the ones stacked above them, they slip from your grasp and shatter, creating a chaotic mess.\n\nNow Rosie is very grumpy.")
-			gameOver = true
+			global.GameOver = true
 		}
 
 	default:
@@ -177,7 +182,7 @@ func (p *Player) Use(itemName string, target string) {
 	}
 	if p.CurrentEntity.Name == target {
 		if _, ok := p.Inventory[itemName]; ok {
-			for _, interaction := range validInteractions {
+			for _, interaction := range ValidInteractions {
 				if interaction.ItemName == itemName && interaction.EntityName == target {
 					p.TriggerEvent(interaction.Event)
 					p.ChangeCarriedWeight(p.Inventory[itemName], "decrease")
@@ -199,4 +204,13 @@ func (p *Player) Use(itemName string, target string) {
 func (p *Player) TriggerEvent(event *Event) {
 	fmt.Println(event.Outcome)
 	event.Triggered = true
+}
+
+func isPlate(itemName string) bool {
+	for _, plate := range plateOrder {
+		if itemName == plate {
+			return true
+		}
+	}
+	return false
 }

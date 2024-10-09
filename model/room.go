@@ -1,4 +1,4 @@
-package main
+package model
 
 func (r *Room) SetDescription(description string) {
 	r.Description = description
