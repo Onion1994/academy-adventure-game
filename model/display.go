@@ -11,4 +11,3 @@ type ConsoleDisplay struct{}
 func (c ConsoleDisplay) Show(text string) {
 	fmt.Println(text)
 }
-
