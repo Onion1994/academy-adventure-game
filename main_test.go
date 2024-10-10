@@ -290,7 +290,7 @@ func TestShowInventory(t *testing.T) {
 	item := model.Item{Name: "Item", Description: "This is an item.", Weight: 10}
 	room.Items[item.Name] = &item
 	
-	player := Player{CurrentRoom: &room, Inventory: make(map[string]*Item), AvailableWeight: 30}
+	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item), AvailableWeight: 30}
 	player.Inventory[item.Name] = &item
 	mockDisplay := &MockDisplay{}
 

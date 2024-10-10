@@ -27,14 +27,6 @@ var staffRoom *model.Room
 var codingLab *model.Room
 var terminalRoom *model.Room
 
-func updateDescription(d model.Describable, newDescription string) {
-	d.SetDescription(newDescription)
-}
-
-func showCommands() {
-	fmt.Println("-exit -> quits the game\n\n-commands -> shows the commands\n\n-look -> shows the content of the room.\n\n-approach <entity> -> to approach an entity\n\n-leave -> to leave an entity\n\n-inventory -> shows items in the inventory\n\n-take <item> -> to take an item into your inventory\n\n-drop <item> -> to drop an item from your inventory and move it to the current room\n\n-use <item> -> to make use of a certain item when you approach an entity\n\n-move <direction> -> to move to a different room\n\n-map -> shows the directions you can take")
-}
-
 func clearScreen() {
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
@@ -46,12 +38,7 @@ func clearScreen() {
 	cmd.Run()
 }
 
-type Describable interface {
-	SetDescription(description string)
-	GetDescription() string
-}
-
-func showCommands(d Display) {
+func showCommands(d model.Display) {
 	d.Show("-exit -> quits the game\n\n-commands -> shows the commands\n\n-look -> shows the content of the room.\n\n-approach <entity> -> to approach an entity\n\n-leave -> to leave an entity\n\n-inventory -> shows items in the inventory\n\n-take <item> -> to take an item into your inventory\n\n-drop <item> -> to drop an item from your inventory and move it to the current room\n\n-use <item> -> to make use of a certain item when you approach an entity\n\n-move <direction> -> to move to a different room\n\n-map -> shows the directions you can take\n")
 }
 
@@ -347,31 +334,31 @@ func main() {
 			switch command {
 			case "commands":
 				clearScreen()
-				showCommands(ConsoleDisplay{})
+				showCommands(model.ConsoleDisplay{})
 			case "look":
 				clearScreen()
-				player.ShowRoom(ConsoleDisplay{})
+				player.ShowRoom(model.ConsoleDisplay{})
 			case "take":
 				clearScreen()
 				if len(args) > 0 {
-					player.Take(args[0], ConsoleDisplay{})
+					player.Take(args[0], model.ConsoleDisplay{})
 				} else {
 					fmt.Println("Specify an item to take.")
 				}
 			case "drop":
 				clearScreen()
 				if len(args) > 0 {
-					player.Drop(args[0], ConsoleDisplay{})
+					player.Drop(args[0], model.ConsoleDisplay{})
 				} else {
 					fmt.Println("Specify an item to drop.")
 				}
 			case "inventory":
 				clearScreen()
-				player.ShowInventory(ConsoleDisplay{})
+				player.ShowInventory(model.ConsoleDisplay{})
 			case "approach":
 				clearScreen()
 				if len(args) > 0 {
-					player.Approach(args[0], ConsoleDisplay{})
+					player.Approach(args[0], model.ConsoleDisplay{})
 
 					if !unlockComputer.Triggered {
 						if player.CurrentEntity != nil && player.CurrentEntity.Name == "computer" {
@@ -389,9 +376,9 @@ func main() {
 				clearScreen()
 				if len(args) > 0 {
 					if player.CurrentEntity == nil {
-						player.Use(args[0], "unspecified_entity", ConsoleDisplay{})
+						player.Use(args[0], "unspecified_entity", model.ConsoleDisplay{})
 					} else {
-						player.Use(args[0], player.CurrentEntity.Name, ConsoleDisplay{})
+						player.Use(args[0], player.CurrentEntity.Name, model.ConsoleDisplay{})
 					}
 				} else {
 					fmt.Println("Specify an item to use.")
@@ -403,7 +390,7 @@ func main() {
 				clearScreen()
 				if _, ok := player.Inventory["lanyard"]; ok {
 					if len(args) > 0 {
-						player.Move(args[0], ConsoleDisplay{})
+						player.Move(args[0], model.ConsoleDisplay{})
 					} else {
 						fmt.Println("Specify a direction to move (e.g., north).")
 					}
@@ -412,7 +399,7 @@ func main() {
 				}
 			case "map":
 				clearScreen()
-				player.ShowMap(ConsoleDisplay{})
+				player.ShowMap(model.ConsoleDisplay{})
 			case computerPassword:
 				continue
 			default:
