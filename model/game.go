@@ -57,7 +57,7 @@ func executeCommand(command string, args []string, g *Game) bool {
 		return true
 	}
 	if !exists {
-		fmt.Printf("Unknown Command : %s", command)
+		fmt.Printf("Unknown Command : %s\n\n", command)
 		return false
 	}
 	cmd.Execute(*input, g)
@@ -99,9 +99,6 @@ func (g *Game) RunGame() {
 	alan := g.codingLab.Entities["alan"]
 	dan := g.terminalRoom.Entities["dan"]
 	rosie := g.staffRoom.Entities["rosie"]
-	// agileManifesto := codingLab.Entities["agile-manifesto"]
-	// cd := codingLab.Items["cd"]
-	// cat := staffRoom.Entities["cat"]
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -241,7 +238,7 @@ func (g *Game) RunGame() {
 			if len(parts) == 0 {
 				continue
 			}
-
+			// replaced switch statements with 4 lines
 			command := (parts[0])
 			args := parts[1:]
 
