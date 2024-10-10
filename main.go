@@ -46,6 +46,15 @@ func clearScreen() {
 	cmd.Run()
 }
 
+type Describable interface {
+	SetDescription(description string)
+	GetDescription() string
+}
+
+func showCommands(d Display) {
+	d.Show("-exit -> quits the game\n\n-commands -> shows the commands\n\n-look -> shows the content of the room.\n\n-approach <entity> -> to approach an entity\n\n-leave -> to leave an entity\n\n-inventory -> shows items in the inventory\n\n-take <item> -> to take an item into your inventory\n\n-drop <item> -> to drop an item from your inventory and move it to the current room\n\n-use <item> -> to make use of a certain item when you approach an entity\n\n-move <direction> -> to move to a different room\n\n-map -> shows the directions you can take\n")
+}
+
 func setupGame() {
 	introduction = "It's the last day at the Academy, and you and your fellow graduates are ready to take on the final hack-day challenge.\nHowever, this time, it's different. Alan and Dan, your instructors, have prepared something more intense than ever before — a true test of your problem-solving and coding skills.\nThe doors to the academy are locked, the windows sealed. The only way out is to find and solve a series of riddles that lead to the terminal in a hidden room.\nThe challenge? Crack the code on the terminal to unlock the doors. But it's not that simple.\nYou'll need to gather items, approach Alan and Dan for cryptic tips, and outsmart the obstacles they've laid out for you.\nAs the tension rises, only your wits, teamwork, and knowledge can guide you to freedom.\nAre you ready to escape?\nOh and remember... You don't want to make Rosie grumpy! So don't do anything crazy.\n\nif at any point you feel lost, type 'commands' to display the list of all commands.\nThe command 'look' is always useful to get your bearings and see the options available to you.\nThe command 'exit' will make you quit the game at any time. Make sure you do mean to use it, or you will inadvertently lose all of your progress!"
 
@@ -338,31 +347,31 @@ func main() {
 			switch command {
 			case "commands":
 				clearScreen()
-				showCommands()
+				showCommands(ConsoleDisplay{})
 			case "look":
 				clearScreen()
-				player.ShowRoom()
+				player.ShowRoom(ConsoleDisplay{})
 			case "take":
 				clearScreen()
 				if len(args) > 0 {
-					player.Take(args[0])
+					player.Take(args[0], ConsoleDisplay{})
 				} else {
 					fmt.Println("Specify an item to take.")
 				}
 			case "drop":
 				clearScreen()
 				if len(args) > 0 {
-					player.Drop(args[0])
+					player.Drop(args[0], ConsoleDisplay{})
 				} else {
 					fmt.Println("Specify an item to drop.")
 				}
 			case "inventory":
 				clearScreen()
-				player.ShowInventory()
+				player.ShowInventory(ConsoleDisplay{})
 			case "approach":
 				clearScreen()
 				if len(args) > 0 {
-					player.Approach(args[0])
+					player.Approach(args[0], ConsoleDisplay{})
 
 					if !unlockComputer.Triggered {
 						if player.CurrentEntity != nil && player.CurrentEntity.Name == "computer" {
@@ -380,9 +389,9 @@ func main() {
 				clearScreen()
 				if len(args) > 0 {
 					if player.CurrentEntity == nil {
-						player.Use(args[0], "unspecified_entity")
+						player.Use(args[0], "unspecified_entity", ConsoleDisplay{})
 					} else {
-						player.Use(args[0], player.CurrentEntity.Name)
+						player.Use(args[0], player.CurrentEntity.Name, ConsoleDisplay{})
 					}
 				} else {
 					fmt.Println("Specify an item to use.")
@@ -394,7 +403,7 @@ func main() {
 				clearScreen()
 				if _, ok := player.Inventory["lanyard"]; ok {
 					if len(args) > 0 {
-						player.Move(args[0])
+						player.Move(args[0], ConsoleDisplay{})
 					} else {
 						fmt.Println("Specify a direction to move (e.g., north).")
 					}
@@ -403,7 +412,7 @@ func main() {
 				}
 			case "map":
 				clearScreen()
-				player.ShowMap()
+				player.ShowMap(ConsoleDisplay{})
 			case computerPassword:
 				continue
 			default:

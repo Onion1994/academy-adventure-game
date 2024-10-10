@@ -11,7 +11,7 @@
 
 ### 3. Run the game:
 
-- go run main.go
+- go run .
 
 ## Commands
 
