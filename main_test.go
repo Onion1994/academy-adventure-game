@@ -852,7 +852,7 @@ func TestShowCommands(t *testing.T) {
 	mockDisplay := &MockDisplay{}
 
 	// Act
-	showCommands(mockDisplay)
+	model.ShowCommands(mockDisplay)
 
 	// Assert
 	output := strings.Join(mockDisplay.Output, "")
