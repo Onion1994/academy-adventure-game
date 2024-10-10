@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+// TODO: Possibility:
+// Would a map of Command be useful? If Command was an interface with one method Execute( input PlayerInput ).
+// Maybe even Execute( w World, input PlayerInput ) World? Just thoughts top of head
+// PlayerInput would be a struct with methods that wrapped the text the player typed in, and allowed it to be parsed/used (a great TDD candidate)
+
 type Game struct {
 	player *Player
 	// validInteractions         []*Interaction
@@ -27,6 +32,36 @@ type Game struct {
 	staffRoom                 *Room
 	codingLab                 *Room
 	terminalRoom              *Room
+}
+
+var Commands = map[string]Command{
+	"look":      LookCommand{},
+	"exit":      ExitCommand{},
+	"commands":  CommandsCommand{},
+	"take":      TakeCommand{},
+	"drop":      DropCommand{},
+	"inventory": InventoryCommand{},
+	"approach":  ApproachCommand{},
+	"use":       UseCommand{},
+	"leave":     LeaveCommand{},
+	"move":      MoveCommand{},
+	"map":       MapCommand{},
+}
+
+func executeCommand(command string, args []string, g *Game) bool {
+
+	input := &PlayerInput{Command: command, Args: args}
+	cmd, exists := Commands[command]
+
+	if command == g.computerPassword {
+		return true
+	}
+	if !exists {
+		fmt.Printf("Unknown Command : %s\n\n", command)
+		return false
+	}
+	cmd.Execute(*input, g)
+	return true
 }
 
 func clearScreen() {
@@ -64,9 +99,6 @@ func (g *Game) RunGame() {
 	alan := g.codingLab.Entities["alan"]
 	dan := g.terminalRoom.Entities["dan"]
 	rosie := g.staffRoom.Entities["rosie"]
-	// agileManifesto := codingLab.Entities["agile-manifesto"]
-	// cd := codingLab.Items["cd"]
-	// cat := staffRoom.Entities["cat"]
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -206,88 +238,19 @@ func (g *Game) RunGame() {
 			if len(parts) == 0 {
 				continue
 			}
-
+			// replaced switch statements with 4 lines
 			command := (parts[0])
 			args := parts[1:]
 
-			switch command {
-			case "commands":
-				clearScreen()
-				ShowCommands(ConsoleDisplay{})
-			case "look":
-				clearScreen()
-				g.player.ShowRoom(ConsoleDisplay{})
-			case "take":
-				clearScreen()
-				if len(args) > 0 {
-					g.player.Take(args[0], ConsoleDisplay{})
-				} else {
-					fmt.Println("Specify an item to take.")
-				}
-			case "drop":
-				clearScreen()
-				if len(args) > 0 {
-					g.player.Drop(args[0], ConsoleDisplay{})
-				} else {
-					fmt.Println("Specify an item to drop.")
-				}
-			case "inventory":
-				clearScreen()
-				g.player.ShowInventory(ConsoleDisplay{})
-			case "approach":
-				clearScreen()
-				if len(args) > 0 {
-					g.player.Approach(args[0], ConsoleDisplay{})
+			executionResult := executeCommand(command, args, g)
 
-					if !g.unlockComputer.Triggered {
-						if g.player.CurrentEntity != nil && g.player.CurrentEntity.Name == "computer" {
-							g.isAttemptingPassword = true
-						}
-					}
-					if g.player.CurrentEntity != nil && g.player.CurrentEntity.Name == "terminal" {
-						g.isAttemptingTerminal = true
-					}
-
-				} else {
-					fmt.Println("Specify an entity to approach.")
-				}
-			case "use":
-				clearScreen()
-				if len(args) > 0 {
-					if g.player.CurrentEntity == nil {
-						g.player.Use(args[0], "unspecified_entity", ConsoleDisplay{})
-					} else {
-						g.player.Use(args[0], g.player.CurrentEntity.Name, ConsoleDisplay{})
-					}
-				} else {
-					fmt.Println("Specify an item to use.")
-				}
-			case "leave":
-				clearScreen()
-				g.player.Leave()
-			case "move":
-				clearScreen()
-				if _, ok := g.player.Inventory["lanyard"]; ok {
-					if len(args) > 0 {
-						g.player.Move(args[0], ConsoleDisplay{})
-					} else {
-						fmt.Println("Specify a direction to move (e.g., north).")
-					}
-				} else {
-					fmt.Println("Doors are shut for you if you don't have a lanyard.")
-				}
-			case "map":
-				clearScreen()
-				g.player.ShowMap(ConsoleDisplay{})
-			case g.computerPassword:
+			if executionResult {
 				continue
-			default:
-				clearScreen()
-				fmt.Println("Unknown command:", command)
 			}
 		}
 	}
 }
+
 func (g *Game) SetupGame() {
 
 	g.introduction = "It's the last day at the Academy, and you and your fellow graduates are ready to take on the final hack-day challenge.\nHowever, this time, it's different. Alan and Dan, your instructors, have prepared something more intense than ever before — a true test of your problem-solving and coding skills.\nThe doors to the academy are locked, the windows sealed. The only way out is to find and solve a series of riddles that lead to the terminal in a hidden room.\nThe challenge? Crack the code on the terminal to unlock the doors. But it's not that simple.\nYou'll need to gather items, approach Alan and Dan for cryptic tips, and outsmart the obstacles they've laid out for you.\nAs the tension rises, only your wits, teamwork, and knowledge can guide you to freedom.\nAre you ready to escape?\nOh and remember... You don't want to make Rosie grumpy! So don't do anything crazy.\n\nif at any point you feel lost, type 'commands' to display the list of all commands.\nThe command 'look' is always useful to get your bearings and see the options available to you.\nThe command 'exit' will make you quit the game at any time. Make sure you do mean to use it, or you will inadvertently lose all of your progress!"
