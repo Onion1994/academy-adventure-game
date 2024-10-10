@@ -1,5 +1,12 @@
 package model
 
+type Entity struct {
+	Name string
+	Description string
+	Hidden bool
+}
+
+
 func (e *Entity) SetDescription(description string) {
 	e.Description = description
 }

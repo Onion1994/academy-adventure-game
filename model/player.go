@@ -5,6 +5,14 @@ import (
 	"academy-adventure-game/global"
 )
 
+type Player struct {
+	CurrentRoom *Room
+	Inventory   map[string]*Item
+	CurrentEntity *Entity
+	CarriedWeight int
+	AvailableWeight int
+}
+
 var plateOrder = []string{"first-plate", "second-plate", "third-plate", "fourth-plate", "fifth-plate", "sixth-plate"}
 var currentPlateIndex = 0
 var ValidInteractions = []*Interaction{}
