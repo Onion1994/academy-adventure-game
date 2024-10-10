@@ -1,10 +1,10 @@
 package model
 
 type Item struct {
-	Name string
+	Name        string
 	Description string
-	Weight int
-	Hidden bool
+	Weight      int
+	Hidden      bool
 }
 
 func (i *Item) SetDescription(description string) {

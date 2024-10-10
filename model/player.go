@@ -56,7 +56,7 @@ func (p *Player) Take(itemName string, d Display) {
 			d.Show(fmt.Sprintln("As you attempt to grab the greasy plates without removing the ones stacked above them, they slip from your grasp and shatter, creating a chaotic mess.\n\nNow Rosie is very grumpy."))
 			global.GameOver = true
 		}
-		
+
 	default:
 		p.AddToInventory(item, d)
 	}
@@ -68,7 +68,6 @@ func (p *Player) AddToInventory(item *Item, d Display) {
 	delete(p.CurrentRoom.Items, item.Name)
 	d.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
 }
-
 
 func (p *Player) ChangeCarriedWeight(item *Item, operation string) {
 	switch {
@@ -112,36 +111,35 @@ func (p *Player) ShowInventory(d Display) {
 }
 
 func (p *Player) ShowRoom(d Display) {
-    d.Show(fmt.Sprintf("You are in %s\n\n%s\n", p.CurrentRoom.Name, p.CurrentRoom.Description))
+	d.Show(fmt.Sprintf("You are in %s\n\n%s\n", p.CurrentRoom.Name, p.CurrentRoom.Description))
 
 	if p.EntitiesArePresent() {
-			d.Show("\nYou can approach:\n")
-			for _, entity := range p.CurrentRoom.Entities {
-				switch {
-				case p.PlayerIsEngaged():
-					if entity.Name == p.CurrentEntity.Name {
-						d.Show(fmt.Sprintf("- %s (currently approached)\n", entity.Name))
-					} else if !entity.Hidden{
-						d.Show(fmt.Sprintf("- %s\n", entity.Name))
-					}
-				default:
-					if !entity.Hidden{
-						d.Show(fmt.Sprintf("- %s\n", entity.Name))
-					}
+		d.Show("\nYou can approach:\n")
+		for _, entity := range p.CurrentRoom.Entities {
+			switch {
+			case p.PlayerIsEngaged():
+				if entity.Name == p.CurrentEntity.Name {
+					d.Show(fmt.Sprintf("- %s (currently approached)\n", entity.Name))
+				} else if !entity.Hidden {
+					d.Show(fmt.Sprintf("- %s\n", entity.Name))
 				}
-			}
-		}
-		
-	if p.ItemsArePresent() {
-			d.Show("\nThe room contains:")
-			for itemName, item := range p.CurrentRoom.Items {
-				if !item.Hidden {
-					d.Show(fmt.Sprintf("\n- %s: %s Weight: %d\n", itemName, item.Description, item.Weight))
+			default:
+				if !entity.Hidden {
+					d.Show(fmt.Sprintf("- %s\n", entity.Name))
 				}
 			}
 		}
 	}
 
+	if p.ItemsArePresent() {
+		d.Show("\nThe room contains:")
+		for itemName, item := range p.CurrentRoom.Items {
+			if !item.Hidden {
+				d.Show(fmt.Sprintf("\n- %s: %s Weight: %d\n", itemName, item.Description, item.Weight))
+			}
+		}
+	}
+}
 
 func (p *Player) PlayerIsEngaged() bool {
 	return p.CurrentEntity != nil
@@ -149,32 +147,31 @@ func (p *Player) PlayerIsEngaged() bool {
 
 func (p *Player) ItemsArePresent() bool {
 	if len(p.CurrentRoom.Items) != 0 {
-	for _, item := range p.CurrentRoom.Items {
-		if !item.Hidden {
-			return true
+		for _, item := range p.CurrentRoom.Items {
+			if !item.Hidden {
+				return true
+			}
 		}
 	}
-}
 	return false
 }
 
 func (p *Player) EntitiesArePresent() bool {
 	if len(p.CurrentRoom.Entities) != 0 {
-	for _, entity := range p.CurrentRoom.Entities {
-		if !entity.Hidden {
-			return true
+		for _, entity := range p.CurrentRoom.Entities {
+			if !entity.Hidden {
+				return true
+			}
 		}
 	}
-}
 	return false
 }
-
 
 func (p *Player) Approach(entityName string, d Display) {
 	if p.CurrentEntity != nil {
 		p.CurrentEntity = nil
 	}
-	if entity, ok := p.CurrentRoom.Entities[entityName]; ok && !entity.Hidden{
+	if entity, ok := p.CurrentRoom.Entities[entityName]; ok && !entity.Hidden {
 
 		p.CurrentEntity = entity
 		d.Show(entity.Description)
@@ -214,20 +211,19 @@ func (p *Player) Use(itemName string, target string, d Display) {
 		d.Show(fmt.Sprintf("You don't have %s.\n", itemName))
 		return
 	}
-	
+
 	for _, interaction := range ValidInteractions {
 		if interactionIsValid(interaction, itemName, target) {
 			handleInteraction(p, interaction, itemName)
 			return
-		} 
+		}
 	}
 	d.Show(fmt.Sprintf("You can't use %s on %s.\n", itemName, target))
 }
 
-
 func itemIsNotInInventory(p *Player, itemName string) bool {
 	_, ok := p.Inventory[itemName]
-    return !ok
+	return !ok
 }
 func interactionIsValid(interaction *Interaction, itemName string, target string) bool {
 	return interaction.ItemName == itemName && interaction.EntityName == target

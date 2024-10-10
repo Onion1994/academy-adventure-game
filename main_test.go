@@ -33,25 +33,25 @@ func (m *MockDisplay) Show(text string) {
 func TestPlayerCanMoveToAvailableRoom(t *testing.T) {
 	//Arrange
 	room1 := model.Room{Name: "Room 1", Description: "This is room 1.", Exits: make(map[string]*model.Room)}
-    room2 := model.Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*model.Room)}
-    room1.Exits["north"] = &room2
-    room2.Exits["south"] = &room1
+	room2 := model.Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*model.Room)}
+	room1.Exits["north"] = &room2
+	room2.Exits["south"] = &room1
 
-    player := model.Player{CurrentRoom: &room1}
+	player := model.Player{CurrentRoom: &room1}
 
 	mockDisplay := &MockDisplay{}
 
-    // Act
-    player.Move("north", mockDisplay)
+	// Act
+	player.Move("north", mockDisplay)
 
-    // Assert
+	// Assert
 	output := strings.Join(mockDisplay.Output, "")
 	expectedRoom := "Room 2"
 	expectedOutput := fmt.Sprintf("You are in %s\n", player.CurrentRoom.Name)
 
-    if player.CurrentRoom.Name != expectedRoom {
-        t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
-    }
+	if player.CurrentRoom.Name != expectedRoom {
+		t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
+	}
 	if output != expectedOutput {
 		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
 	}
@@ -76,9 +76,9 @@ func TestPlayerCannotMoveToUnavailableRoom(t *testing.T) {
 	expectedOutput := fmt.Sprintln("You can't go that way!")
 	expectedRoom := "Room 1"
 
-    if player.CurrentRoom.Name != expectedRoom {
-        t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
-    }
+	if player.CurrentRoom.Name != expectedRoom {
+		t.Errorf("Expected %s, got %s", expectedRoom, player.CurrentRoom.Name)
+	}
 	if output != expectedOutput {
 		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
 	}
@@ -87,15 +87,15 @@ func TestPlayerCannotMoveToUnavailableRoom(t *testing.T) {
 func TestTakeItemIfAvailable(t *testing.T) {
 	//Arrange
 	room := model.Room{Items: make(map[string]*model.Item)}
-	
+
 	item := model.Item{Name: "Item", Description: "This is an item."}
 
 	room.Items[item.Name] = &item
-	
+
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item)}
 
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 	player.Take(item.Name, mockDisplay)
 
@@ -106,7 +106,7 @@ func TestTakeItemIfAvailable(t *testing.T) {
 	if _, ok := player.Inventory[item.Name]; !ok {
 		t.Errorf("Expected true for item present in the inventory, got false")
 	}
-	
+
 	if _, ok := room.Items[item.Name]; ok {
 		t.Errorf("Expected false for item missing from the room, got true")
 	}
@@ -120,15 +120,15 @@ func TestCannotTakeAbsentItem(t *testing.T) {
 	//Arrange
 	room1 := model.Room{Items: make(map[string]*model.Item)}
 	room2 := model.Room{Items: make(map[string]*model.Item)}
-	
+
 	item := model.Item{Name: "Item", Description: "This is an item.", Weight: 10}
 
 	room1.Items[item.Name] = &item
-	
-	player := model.Player{CurrentRoom: &room2, Inventory: make(map[string]*model.Item),  CarriedWeight: 0, AvailableWeight: 30}
-	
+
+	player := model.Player{CurrentRoom: &room2, Inventory: make(map[string]*model.Item), CarriedWeight: 0, AvailableWeight: 30}
+
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 	player.Take(item.Name, mockDisplay)
 
@@ -149,9 +149,9 @@ func TestCannotTakeNonexistentItem(t *testing.T) {
 	room2 := model.Room{Items: make(map[string]*model.Item)}
 
 	player := model.Player{CurrentRoom: &room2, Inventory: make(map[string]*model.Item), CarriedWeight: 0, AvailableWeight: 30}
-	
+
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 	player.Take("item", mockDisplay)
 
@@ -170,15 +170,15 @@ func TestCannotTakeNonexistentItem(t *testing.T) {
 func TestCannotTakeHiddenItem(t *testing.T) {
 	//Arrange
 	room := model.Room{Items: make(map[string]*model.Item)}
-	
+
 	item := model.Item{Name: "Item", Description: "This is an item.", Weight: 10, Hidden: true}
 
 	room.Items[item.Name] = &item
-	
-	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item),  CarriedWeight: 0, AvailableWeight: 30}
-	
+
+	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item), CarriedWeight: 0, AvailableWeight: 30}
+
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 	player.Take(item.Name, mockDisplay)
 
@@ -197,16 +197,16 @@ func TestCannotTakeHiddenItem(t *testing.T) {
 func TestCanDropItemFromInventoryIntoRoom(t *testing.T) {
 	//Arrange
 	room := model.Room{Items: make(map[string]*model.Item)}
-	
+
 	item := model.Item{Name: "Item", Description: "This is an item."}
 
 	room.Items[item.Name] = &item
-	
+
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item)}
 	player.Inventory[item.Name] = &item
-	
+
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 
 	player.Drop(item.Name, mockDisplay)
@@ -237,11 +237,11 @@ func TestCannotDropAbsentItem(t *testing.T) {
 	item := model.Item{Name: "Item", Description: "This is an item."}
 
 	room1.Items[item.Name] = &item
-	
+
 	player := model.Player{CurrentRoom: &room2, Inventory: make(map[string]*model.Item)}
 
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 
 	player.Drop(item.Name, mockDisplay)
@@ -261,11 +261,11 @@ func TestCannotDropAbsentItem(t *testing.T) {
 func TestCannotDropNonexistentItem(t *testing.T) {
 	//Arrange
 	room := model.Room{Items: make(map[string]*model.Item)}
-	
+
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item)}
 
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 	player.Drop("Item", mockDisplay)
 
@@ -289,7 +289,7 @@ func TestShowInventory(t *testing.T) {
 	room := model.Room{Items: make(map[string]*model.Item)}
 	item := model.Item{Name: "Item", Description: "This is an item.", Weight: 10}
 	room.Items[item.Name] = &item
-	
+
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item), AvailableWeight: 30}
 	player.Inventory[item.Name] = &item
 	mockDisplay := &MockDisplay{}
@@ -306,11 +306,10 @@ func TestShowInventory(t *testing.T) {
 	}
 }
 
-
 func TestShowInventoryIsEmpty(t *testing.T) {
 	// Arrange
 	room := model.Room{Items: make(map[string]*model.Item)}
-	
+
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item), AvailableWeight: 30}
 	mockDisplay := &MockDisplay{}
 
@@ -461,9 +460,9 @@ func TestExpectedCarriedWeight(t *testing.T) {
 	room.Items[item2.Name] = &item2
 	room.Items[item3.Name] = &item3
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item), AvailableWeight: 30}
-	
+
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 	player.Take(item1.Name, mockDisplay)
 	player.Take(item2.Name, mockDisplay)
@@ -473,7 +472,7 @@ func TestExpectedCarriedWeight(t *testing.T) {
 	//Assert
 	expectedOutput := 20
 	output := player.CarriedWeight
-	
+
 	if output != expectedOutput {
 		t.Errorf("Expected output:\n%d\nGot:\n%d", expectedOutput, output)
 	}
@@ -491,7 +490,7 @@ func TestExpectedAvailableAndCarriedWeight(t *testing.T) {
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item), AvailableWeight: 30}
 
 	mockDisplay := &MockDisplay{}
-	
+
 	//Act
 	player.Take(item1.Name, mockDisplay)
 	player.Drop(item1.Name, mockDisplay)
@@ -501,10 +500,10 @@ func TestExpectedAvailableAndCarriedWeight(t *testing.T) {
 	//Assert
 	expectedCarriedWeight := 16
 	actualCarriedWeight := player.CarriedWeight
-	
+
 	expectedAvailableWeight := 14
 	actualAvailableWeight := player.AvailableWeight
-	
+
 	if expectedCarriedWeight != actualCarriedWeight {
 		t.Errorf("Expected output:\n%d\nGot:\n%d", expectedCarriedWeight, actualCarriedWeight)
 	}
@@ -513,7 +512,7 @@ func TestExpectedAvailableAndCarriedWeight(t *testing.T) {
 	}
 }
 
-func TestShouldApproachPresentEntity(t* testing.T) {
+func TestShouldApproachPresentEntity(t *testing.T) {
 	//Arrange
 	room := model.Room{Name: "Room", Description: "This is a room.", Entities: make(map[string]*model.Entity)}
 	entity := model.Entity{Name: "Entity", Description: "This is an entity"}
@@ -525,7 +524,7 @@ func TestShouldApproachPresentEntity(t* testing.T) {
 	player.Approach(entity.Name, mockDisplay)
 
 	//Assert
-	expectedCurrentEntity :=  entity.Name
+	expectedCurrentEntity := entity.Name
 	actualCurrentEntity := player.CurrentEntity.Name
 
 	expectedOutput := player.CurrentEntity.Description
@@ -540,7 +539,7 @@ func TestShouldApproachPresentEntity(t* testing.T) {
 	}
 }
 
-func TestShouldNotApproachAbsentEntity(t* testing.T) {
+func TestShouldNotApproachAbsentEntity(t *testing.T) {
 	//Arrange
 	room1 := model.Room{Name: "Room 1", Entities: make(map[string]*model.Entity)}
 	room2 := model.Room{Entities: make(map[string]*model.Entity)}
@@ -558,14 +557,14 @@ func TestShouldNotApproachAbsentEntity(t* testing.T) {
 	output := strings.Join(mockDisplay.Output, "")
 
 	if player.CurrentEntity != nil {
-        t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
-    }
+		t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
+	}
 	if expectedOutput != output {
 		t.Errorf("Expected %s, got %s", expectedOutput, output)
 	}
 }
 
-func TestShouldNotApproachNonexistentEntity(t* testing.T) {
+func TestShouldNotApproachNonexistentEntity(t *testing.T) {
 	//Arrange
 	room1 := model.Room{Name: "Room 1", Entities: make(map[string]*model.Entity)}
 	player := model.Player{CurrentRoom: &room1}
@@ -580,14 +579,14 @@ func TestShouldNotApproachNonexistentEntity(t* testing.T) {
 	output := strings.Join(mockDisplay.Output, "")
 
 	if player.CurrentEntity != nil {
-        t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
-    }
+		t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
+	}
 	if expectedOutput != output {
 		t.Errorf("Expected %s, got %s", expectedOutput, output)
 	}
 }
 
-func TestShouldNotApproachHiddenEntity(t* testing.T) {
+func TestShouldNotApproachHiddenEntity(t *testing.T) {
 	//Arrange
 	room := model.Room{Name: "Room 1", Entities: make(map[string]*model.Entity)}
 	entity := model.Entity{Name: "Entity", Description: "This is an entity", Hidden: true}
@@ -604,35 +603,35 @@ func TestShouldNotApproachHiddenEntity(t* testing.T) {
 	output := strings.Join(mockDisplay.Output, "")
 
 	if player.CurrentEntity != nil {
-        t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
-    }
+		t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
+	}
 	if expectedOutput != output {
 		t.Errorf("Expected %s, got %s", expectedOutput, output)
 	}
 }
 
 func TestUpdateDescription(t *testing.T) {
-    //Arrange
-    room := &model.Room{Name: "Room", Description: "This is the first description"}
-    item := &model.Item{Name: "Item", Description: "This is the first description"}
-    entity := &model.Entity{Name: "Entity", Description: "This is the first description"}
-    newDescription := "This is the second description"
-    
-    //Act
-    room.SetDescription(newDescription)
-    item.SetDescription(newDescription)
-    entity.SetDescription(newDescription)
+	//Arrange
+	room := &model.Room{Name: "Room", Description: "This is the first description"}
+	item := &model.Item{Name: "Item", Description: "This is the first description"}
+	entity := &model.Entity{Name: "Entity", Description: "This is the first description"}
+	newDescription := "This is the second description"
 
-    //Assert
-    if room.GetDescription() != newDescription {
-        t.Errorf("Expected description:\n%s\nGot:\n%s", newDescription, room.GetDescription())
-    }
-    if item.GetDescription() != newDescription {
-        t.Errorf("Expected description:\n%s\nGot:\n%s", newDescription, item.GetDescription())
-    }
-    if entity.GetDescription() != newDescription {
-        t.Errorf("Expected description:\n%s\nGot:\n%s", newDescription, entity.GetDescription())
-    }
+	//Act
+	room.SetDescription(newDescription)
+	item.SetDescription(newDescription)
+	entity.SetDescription(newDescription)
+
+	//Assert
+	if room.GetDescription() != newDescription {
+		t.Errorf("Expected description:\n%s\nGot:\n%s", newDescription, room.GetDescription())
+	}
+	if item.GetDescription() != newDescription {
+		t.Errorf("Expected description:\n%s\nGot:\n%s", newDescription, item.GetDescription())
+	}
+	if entity.GetDescription() != newDescription {
+		t.Errorf("Expected description:\n%s\nGot:\n%s", newDescription, entity.GetDescription())
+	}
 }
 
 func TestShouldDisengageEntity(t *testing.T) {
@@ -649,18 +648,18 @@ func TestShouldDisengageEntity(t *testing.T) {
 	player.Leave()
 
 	if player.CurrentEntity != nil {
-        t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
-    }
+		t.Errorf("Expected CurrentEntity to be nil, but got a non-nil entity")
+	}
 }
 
 func TestPlayerMoveShouldDisengageEntity(t *testing.T) {
 	//Arrange
 	room1 := model.Room{Name: "Room 1", Description: "This is room 1.", Exits: make(map[string]*model.Room), Entities: make(map[string]*model.Entity)}
-    room2 := model.Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*model.Room), Entities: make(map[string]*model.Entity)}
+	room2 := model.Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*model.Room), Entities: make(map[string]*model.Entity)}
 
-    room1.Exits["north"] = &room2
-    room2.Exits["south"] = &room1
-	
+	room1.Exits["north"] = &room2
+	room2.Exits["south"] = &room1
+
 	entity := model.Entity{Name: "Entity", Description: "This is an entity"}
 	room1.Entities[entity.Name] = &entity
 	player := model.Player{CurrentRoom: &room1, CurrentEntity: nil}
@@ -700,16 +699,16 @@ func TestNewEngagementShouldCancelFormer(t *testing.T) {
 	}
 }
 
-func TestShowMap(t * testing.T) {
+func TestShowMap(t *testing.T) {
 	//Arrange
 	room1 := model.Room{Name: "Room 1", Description: "This is room 1.", Exits: make(map[string]*model.Room), Entities: make(map[string]*model.Entity)}
-    room2 := model.Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*model.Room), Entities: make(map[string]*model.Entity)}
+	room2 := model.Room{Name: "Room 2", Description: "This is room 2.", Exits: make(map[string]*model.Room), Entities: make(map[string]*model.Entity)}
 
-    room1.Exits["north"] = &room2
-    room2.Exits["south"] = &room1
+	room1.Exits["north"] = &room2
+	room2.Exits["south"] = &room1
 
 	player := model.Player{CurrentRoom: &room1}
-	
+
 	mockDisplay := &MockDisplay{}
 
 	// Act
@@ -755,7 +754,6 @@ func TestValidUseItem(t *testing.T) {
 	}
 }
 
-
 func TestInvalidUseItem(t *testing.T) {
 	//Arrange
 	setUpValidInteractions()
@@ -766,7 +764,7 @@ func TestInvalidUseItem(t *testing.T) {
 	room.Items[key.Name] = &key
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item)}
 	player.Inventory[key.Name] = &key
-	
+
 	mockDisplay := &MockDisplay{}
 
 	//Act
@@ -798,7 +796,7 @@ func TestCannotUseAbsentItem(t *testing.T) {
 	room.Entities[door.Name] = &door
 	room.Items[key.Name] = &key
 	player := model.Player{CurrentRoom: &room, Inventory: make(map[string]*model.Item)}
-	
+
 	mockDisplay := &MockDisplay{}
 
 	//Act
