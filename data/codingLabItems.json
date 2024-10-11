@@ -1,0 +1,44 @@
+{
+  "first-plate": {
+    "Name": "first-plate",
+    "Description": "The plate on top of the stack.",
+    "Weight": 6,
+    "Hidden": true
+  },
+  "second-plate": {
+    "Name": "second-plate",
+    "Description": "The second plate of the stack.",
+    "Weight": 6,
+    "Hidden": true
+  },
+  "third-plate": {
+    "Name": "third-plate",
+    "Description": "The third plate of the stack.",
+    "Weight": 6,
+    "Hidden": true
+  },
+  "fourth-plate": {
+    "Name": "fourth-plate",
+    "Description": "The fourth plate of the stack.",
+    "Weight": 6,
+    "Hidden": true
+  },
+  "fifth-plate": {
+    "Name": "fifth-plate",
+    "Description": "The fifth plate of the stack.",
+    "Weight": 6,
+    "Hidden": true
+  },
+  "sixth-plate": {
+    "Name": "sixth-plate",
+    "Description": "The plate at the bottom of the stack.",
+    "Weight": 6,
+    "Hidden": true
+  },
+  "cd": {
+    "Name": "cd",
+    "Description": "A compact disc with '\\secret-files' written on it in bold letters.\nIt almost seems to call out to you, hinting at hidden knowledge.",
+    "Weight": 1,
+    "Hidden": false
+  }
+}

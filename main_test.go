@@ -26,8 +26,8 @@ type MockDisplay struct {
 	Output []string
 }
 
-func (m *MockDisplay) Show(text string) {
-	m.Output = append(m.Output, text)
+func (mockDisplay *MockDisplay) Show(text string) {
+	mockDisplay.Output = append(mockDisplay.Output, text)
 }
 
 func TestPlayerCanMoveToAvailableRoom(t *testing.T) {
@@ -37,7 +37,7 @@ func TestPlayerCanMoveToAvailableRoom(t *testing.T) {
 	room1.Exits["north"] = &room2
 	room2.Exits["south"] = &room1
 
-	player := model.Player{CurrentRoom: &room1}
+	player := model.Player{CurrentRoom: &room1} // mock display as a field of player - a possibility 
 
 	mockDisplay := &MockDisplay{}
 
