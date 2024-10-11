@@ -2,18 +2,9 @@ package model
 
 import (
 	"academy-adventure-game/global"
-	"bufio"
 	"fmt"
-	"os"
-	"os/exec"
-	"runtime"
 	"strings"
 )
-
-// TODO: Possibility:
-// Would a map of Command be useful? If Command was an interface with one method Execute( input PlayerInput ).
-// Maybe even Execute( w World, input PlayerInput ) World? Just thoughts top of head
-// PlayerInput would be a struct with methods that wrapped the text the player typed in, and allowed it to be parsed/used (a great TDD candidate)
 
 type Game struct {
 	player *Player
@@ -48,38 +39,24 @@ var Commands = map[string]Command{
 	"map":       MapCommand{},
 }
 
-func executeCommand(command string, args []string, game *Game) bool {
+func executeCommand(input PlayerInput, game *Game) string {
 
-	input := &PlayerInput{Command: command, Args: args}
+	command := input.Command
+
 	cmd, exists := Commands[command]
 
 	if command == game.computerPassword {
-		return true
+		return "Yay you cracked the password"
 	}
+
 	if !exists {
-		fmt.Printf("Unknown Command : %s\n\n", command)
-		return false
+		return fmt.Sprintf("Unknown command: %s", command)
 	}
-	cmd.Execute(*input, game)
-	return true
+	return cmd.Execute(input, game)
+
 }
 
-func clearScreen() {
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/c", "cls")
-	} else {
-		cmd = exec.Command("clear")
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Run()
-}
-
-func ShowCommands(d Display) {
-	d.Show("-exit -> quits the game\n\n-commands -> shows the commands\n\n-look -> shows the content of the room.\n\n-approach <entity> -> to approach an entity\n\n-leave -> to leave an entity\n\n-inventory -> shows items in the inventory\n\n-take <item> -> to take an item into your inventory\n\n-drop <item> -> to drop an item from your inventory and move it to the current room\n\n-use <item> -> to make use of a certain item when you approach an entity\n\n-move <direction> -> to move to a different room\n\n-map -> shows the directions you can take\n")
-}
-
-func (game *Game) RunGame() {
+func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 	abandonedLanyard := game.staffRoom.Items["abandoned-lanyard"]
 	tea := game.staffRoom.Items["tea"]
 	lanyard := game.staffRoom.Items["lanyard"]
@@ -100,8 +77,10 @@ func (game *Game) RunGame() {
 	dan := game.terminalRoom.Entities["dan"]
 	rosie := game.staffRoom.Entities["rosie"]
 
-	scanner := bufio.NewScanner(os.Stdin)
-	for {
+	var response GameResponse
+	response.GameOver = false
+
+	for !global.GameOver {
 		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "sofa" {
 			abandonedLanyard.Hidden = false
 			sofa.SetDescription("Your fellow academy student continues to sleep on the sofa. Something tells you it's down to you to get stuff done today...")
@@ -149,103 +128,90 @@ func (game *Game) RunGame() {
 		if _, ok := game.player.Inventory["abandoned-lanyard"]; ok {
 			game.player.TriggerEvent(game.grumpyRosie)
 			global.GameOver = true
+			response.GameOver = true
 		}
 
 		if global.GameOver {
-			fmt.Println("Thank you for playing!")
-			break
+			response.Message = "Thank you for playing!"
+			return response
 		}
 
-		if !game.introductionShown {
-			clearScreen()
-			fmt.Println(game.introduction)
-			game.introductionShown = true
+		if playerInput.Command == "start" {
+			if !game.introductionShown {
+				response.Message = game.introduction
+				game.introductionShown = true
+				return response
+			}
 		}
 
-		fmt.Print("Enter command: ")
+		input := playerInput.Command
 
-		if scanner.Scan() {
-			input := scanner.Text()
-			input = strings.TrimSpace(input)
-			input = strings.ToLower(input)
+		if input == "exit" {
+			response.Message = "Thank you for playing!"
+			response.GameOver = true
+			global.GameOver = true
+			return response
+		}
 
-			if input == "exit" {
-				clearScreen()
-				fmt.Println("Thank you for playing!")
-				break
+		if game.isAttemptingPassword {
+			if game.remainingPasswordAttempts == 1 && input != game.computerPassword {
+				response.Message = "Alan's computer is locked. Thank you for playing!"
+				response.GameOver = true
+				global.GameOver = true
+				return response
+			}
+			if input == game.computerPassword {
+				game.player.TriggerEvent(game.unlockComputer)
+				computer.SetDescription("function completeTask(pile)\n   if pile == 0:\n      return 'Task Complete'\n   else:\n      completeTask(pile - 1)\n")
+				alan.SetDescription("You've cracked the password! Impressive work...")
+				game.isAttemptingPassword = false
+				desk.Hidden = false
+				dishwasher.Hidden = false
+			} else if input == "leave" {
+				game.isAttemptingPassword = false
+			} else {
+				game.remainingPasswordAttempts--
+				response.Message = fmt.Sprintf("Incorrect password. Remaining attempts: %d", game.remainingPasswordAttempts)
+				computer.SetDescription(fmt.Sprintf("Alan's computer. Remaining attempts: %d.\nEnter the password:", game.remainingPasswordAttempts))
+				return response
+			}
+		}
+
+		if game.isAttemptingTerminal {
+			if input == "leave" {
+				game.isAttemptingTerminal = false
+				game.player.Leave()
+				return response
 			}
 
-			if game.isAttemptingPassword {
-				if game.remainingPasswordAttempts == 1 && input != game.computerPassword {
-					clearScreen()
-					fmt.Println("Alan's computer is locked, halting your progress in the challenge. To top it off, you've made Rosie grumpy, as she'll now have to take the computer to IT.\n\nThank you for playing!")
-					break
-				}
-				if input == game.computerPassword {
-					clearScreen()
-					game.player.TriggerEvent(game.unlockComputer)
-					computer.SetDescription("function completeTask(pile)\n   if pile == 0:\n      return 'Task Complete'\n   else:\n      completeTask(pile - 1)\n")
-					alan.SetDescription("You've cracked the password! Impressive work... You should now see an open file containing a recursive function.\n\nFollow its instructions carefully, and you'll be one step closer to victory!\nBut, a word of caution: the task ahead is, well, a bit more hands-on than you might expect...")
-					game.isAttemptingPassword = false
-					desk.Hidden = false
-					dishwasher.Hidden = false
-				} else if input == "leave" {
-					game.isAttemptingPassword = false
+			if !game.IsFirstCommand {
+				if input == "cd /secret-files" {
+					response.Message = "The terminal displays:\n\n/secret-files/\n\nEnter the final command to win the game!"
+					game.IsFirstCommand = true
+					terminal.SetDescription("A sleek terminal sits on the desk...")
 				} else {
-					game.remainingPasswordAttempts--
-					clearScreen()
-					fmt.Printf("Incorrect password. Try again, or type 'leave' to stop entering the password.\n\nRemaining attempts: %d\n\n", game.remainingPasswordAttempts)
-					computer.SetDescription(fmt.Sprintf("Alan's computer. You need the password to get in.\nRemaining attempts: %d.\nType 'leave' to stop entering the password.\n\nEnter the password:\n", game.remainingPasswordAttempts))
-					continue
+					response.Message = fmt.Sprintf("bash: %s: command not found", input)
 				}
-			}
-
-			if game.isAttemptingTerminal {
-				if input == "leave" {
-					game.isAttemptingTerminal = false
-					clearScreen()
-					game.player.Leave()
-					continue
-				}
-
-				if !game.IsFirstCommand {
-					if input == "cd /secret-files" {
-						clearScreen()
-						fmt.Println("The terminal displays:\n\n/secret-files/\n\nIt looks like you are on the right track.\nEnter the final command to win the game!\n\nType 'leave' to stop entering commands on the terminal.")
-						game.IsFirstCommand = true
-						terminal.SetDescription("A sleek terminal sits on the desk, its screen displaying lines of code and system commands.\nThe keyboard, slightly worn, hints at frequent use.\nThis device is essential for executing tasks and accessing the building's network.\n\nEnter your commands below or type 'leave' to exit the terminal.\n\nThe terminal displays:\n\n/secret-files/\n\nIt looks like you are on the right track.\nEnter the final command to win the game!\n\nType 'leave' to stop entering commands on the terminal.\n")
-						continue
-					} else {
-						clearScreen()
-						fmt.Printf("The terminal displays:\n\nbash: %s: command not found\n\nType 'leave' to stop entering commands on the terminal\n\n", input)
-						continue
-					}
+				return response
+			} else {
+				if input == "cat unlock-exits-instructions.txt" {
+					response.Message = "Victory Achieved! The doors swing wide."
+					response.GameOver = true
+					global.GameOver = true
+					return response
 				} else {
-					if input == "cat unlock-exits-instructions.txt" {
-						clearScreen()
-						fmt.Println("As you execute the final command, the terminal whirs to life, and the screen fills with a flurry of colorful text.\nThe words 'Victory Achieved!' flash across the display, illuminating your face with a soft glow.\nYou feel a rush of adrenaline as the file containing the instructions to unlock the exits appears before you.\nFollowing the instructions carefully, you swiftly input the necessary commands, and with a satisfying beep, the locks on the exits click open.\nThe room is filled with the sound of machinery grinding to a halt as the doors swing wide.")
-						global.GameOver = true
-						continue
-					} else {
-						clearScreen()
-						fmt.Printf("The terminal displays:\n\nbash: %s: command not found\n\nType 'leave' to stop entering commands on the terminal\n\n", input)
-						continue
-					}
+					response.Message = fmt.Sprintf("bash: %s: command not found", input)
+					return response
 				}
 			}
-
-			parts := strings.Fields(input)
-			if len(parts) == 0 {
-				continue
-			}
-
-			command := (parts[0])
-			args := parts[1:]
-
-			// replaced switch statements with 1 line
-			executeCommand(command, args, game)
 		}
+
+		result := executeCommand(playerInput, game)
+		response.Message = result
+		response.GameOver = global.GameOver
+		return response
 	}
+	return response
 }
 
 func (game *Game) SetupGame() {

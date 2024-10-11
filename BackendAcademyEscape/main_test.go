@@ -3,9 +3,32 @@ package main
 import (
 	"academy-adventure-game/model"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
+
+func TestRootHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(rootHandler)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	expected := "Hello, this is the Academy adventure game!"
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+	}
+}
 
 func setUpValidInteractions() {
 	model.ValidInteractions = []*model.Interaction{
@@ -26,8 +49,9 @@ type MockDisplay struct {
 	Output []string
 }
 
-func (mockDisplay *MockDisplay) Show(text string) {
+func (mockDisplay *MockDisplay) Show(text string) string {
 	mockDisplay.Output = append(mockDisplay.Output, text)
+	return strings.Join(mockDisplay.Output, "")
 }
 
 func TestPlayerCanMoveToAvailableRoom(t *testing.T) {
@@ -37,7 +61,7 @@ func TestPlayerCanMoveToAvailableRoom(t *testing.T) {
 	room1.Exits["north"] = &room2
 	room2.Exits["south"] = &room1
 
-	player := model.Player{CurrentRoom: &room1} // mock display as a field of player - a possibility 
+	player := model.Player{CurrentRoom: &room1} // mock display as a field of player - a possibility
 
 	mockDisplay := &MockDisplay{}
 
