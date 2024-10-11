@@ -9,28 +9,28 @@ type Command interface {
 
 type LookCommand struct{}
 
-func (l LookCommand) Execute(input PlayerInput, g *Game) {
+func (l LookCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
-	g.player.ShowRoom(ConsoleDisplay{})
+	game.player.ShowRoom(ConsoleDisplay{})
 }
 
 type ExitCommand struct{}
 
-func (e ExitCommand) Execute(input PlayerInput, g *Game) {}
+func (e ExitCommand) Execute(input PlayerInput, game *Game) {}
 
 type CommandsCommand struct{}
 
-func (c CommandsCommand) Execute(input PlayerInput, g *Game) {
+func (c CommandsCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
 	ShowCommands(ConsoleDisplay{})
 }
 
 type TakeCommand struct{}
 
-func (t TakeCommand) Execute(input PlayerInput, g *Game) {
+func (t TakeCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
 	if len(input.Args) > 0 {
-		g.player.Take(input.Args[0], ConsoleDisplay{})
+		game.player.Take(input.Args[0], ConsoleDisplay{})
 	} else {
 		fmt.Println("Specify an item to take.")
 	}
@@ -38,10 +38,10 @@ func (t TakeCommand) Execute(input PlayerInput, g *Game) {
 
 type DropCommand struct{}
 
-func (d DropCommand) Execute(input PlayerInput, g *Game) {
+func (d DropCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
 	if len(input.Args) > 0 {
-		g.player.Drop(input.Args[0], ConsoleDisplay{})
+		game.player.Drop(input.Args[0], ConsoleDisplay{})
 	} else {
 		fmt.Println("Specify an item to drop.")
 	}
@@ -49,25 +49,25 @@ func (d DropCommand) Execute(input PlayerInput, g *Game) {
 
 type InventoryCommand struct{}
 
-func (i InventoryCommand) Execute(input PlayerInput, g *Game) {
+func (i InventoryCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
-	g.player.ShowInventory(ConsoleDisplay{})
+	game.player.ShowInventory(ConsoleDisplay{})
 }
 
 type ApproachCommand struct{}
 
-func (a ApproachCommand) Execute(input PlayerInput, g *Game) {
+func (a ApproachCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
 	if len(input.Args) > 0 {
-		g.player.Approach(input.Args[0], ConsoleDisplay{})
+		game.player.Approach(input.Args[0], ConsoleDisplay{})
 
-		if !g.unlockComputer.Triggered {
-			if g.player.CurrentEntity != nil && g.player.CurrentEntity.Name == "computer" {
-				g.isAttemptingPassword = true
+		if !game.unlockComputer.Triggered {
+			if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "computer" {
+				game.isAttemptingPassword = true
 			}
 		}
-		if g.player.CurrentEntity != nil && g.player.CurrentEntity.Name == "terminal" {
-			g.isAttemptingTerminal = true
+		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "terminal" {
+			game.isAttemptingTerminal = true
 		}
 
 	} else {
@@ -77,13 +77,13 @@ func (a ApproachCommand) Execute(input PlayerInput, g *Game) {
 
 type UseCommand struct{}
 
-func (u UseCommand) Execute(input PlayerInput, g *Game) {
+func (u UseCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
 	if len(input.Args) > 0 {
-		if g.player.CurrentEntity == nil {
-			g.player.Use(input.Args[0], "unspecified_entity", ConsoleDisplay{})
+		if game.player.CurrentEntity == nil {
+			game.player.Use(input.Args[0], "unspecified_entity", ConsoleDisplay{})
 		} else {
-			g.player.Use(input.Args[0], g.player.CurrentEntity.Name, ConsoleDisplay{})
+			game.player.Use(input.Args[0], game.player.CurrentEntity.Name, ConsoleDisplay{})
 		}
 	} else {
 		fmt.Println("Specify an item to use.")
@@ -92,18 +92,18 @@ func (u UseCommand) Execute(input PlayerInput, g *Game) {
 
 type LeaveCommand struct{}
 
-func (l LeaveCommand) Execute(input PlayerInput, g *Game) {
+func (l LeaveCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
-	g.player.Leave()
+	game.player.Leave()
 }
 
 type MoveCommand struct{}
 
-func (m MoveCommand) Execute(input PlayerInput, g *Game) {
+func (m MoveCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
-	if _, ok := g.player.Inventory["lanyard"]; ok {
+	if _, ok := game.player.Inventory["lanyard"]; ok {
 		if len(input.Args) > 0 {
-			g.player.Move(input.Args[0], ConsoleDisplay{})
+			game.player.Move(input.Args[0], ConsoleDisplay{})
 		} else {
 			fmt.Println("Specify a direction to move (e.g., north).")
 		}
@@ -114,7 +114,7 @@ func (m MoveCommand) Execute(input PlayerInput, g *Game) {
 
 type MapCommand struct{}
 
-func (m MapCommand) Execute(input PlayerInput, g *Game) {
+func (m MapCommand) Execute(input PlayerInput, game *Game) {
 	clearScreen()
-	g.player.ShowMap(ConsoleDisplay{})
+	game.player.ShowMap(ConsoleDisplay{})
 }

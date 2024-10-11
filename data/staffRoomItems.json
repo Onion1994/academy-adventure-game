@@ -1,0 +1,20 @@
+{
+  "tea": {
+    "Name": "tea",
+    "Description": "A steaming cup of Yorkshire tea, rich and comforting.",
+    "Weight": 2,
+    "Hidden": true
+  },
+  "lanyard": {
+    "Name": "lanyard",
+    "Description": "Your lanyard, a key to unlocking any door within the building.",
+    "Weight": 1,
+    "Hidden": true
+  },
+  "abandoned-lanyard": {
+    "Name": "abandoned-lanyard",
+    "Description": "An abandoned lanyard, a key to unlocking any door within the building.",
+    "Weight": 1,
+    "Hidden": true
+  }
+}
