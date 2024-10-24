@@ -1,11 +1,13 @@
 package main
 
 import (
+	"academy-adventure-game/global"
 	"academy-adventure-game/model"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/cors"
 	"net/http"
+
+	"github.com/rs/cors"
 )
 
 var game *model.Game
@@ -16,15 +18,14 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func startGame(writer http.ResponseWriter, request *http.Request) {
-	
-	for {
+
 		var playerInput model.PlayerInput
 
 		err := json.NewDecoder(request.Body).Decode(&playerInput)
 
 		if err != nil {
             fmt.Println("Error decoding request body:", err)
-            http.Error(writer, "Bad Request", http.StatusBadRequest)
+            http.Error(writer, "Bad Request Body", http.StatusBadRequest)
             return
         }
 
@@ -33,9 +34,9 @@ func startGame(writer http.ResponseWriter, request *http.Request) {
 		json.NewEncoder(writer).Encode(response)
 
 		if response.GameOver {
-			break
+			global.GameOver = true
+			return
 		}
-	}
 }
 
 func CorsMiddleware(next http.Handler) http.Handler {
@@ -63,8 +64,8 @@ func main() {
 	// 	fmt.Printf("response: %s", gameResponse.Message)
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /", rootHandler)
-	router.HandleFunc("POST /GameResponse", startGame)
+	router.HandleFunc("/", rootHandler)
+	router.HandleFunc("/GameResponse", startGame)
 
 	game = &model.Game{}
 	game.SetupGame()
