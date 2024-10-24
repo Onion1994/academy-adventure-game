@@ -10,27 +10,27 @@ import (
 
 var game *model.Game
 
+	
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, "Hello, this is the Academy adventure game!")
 }
 
 func startGame(writer http.ResponseWriter, request *http.Request) {
-	game := &model.Game{}
-	game.SetupGame()
-
+	
 	for {
 		var playerInput model.PlayerInput
-		if err := json.NewDecoder(request.Body).Decode(&playerInput); err != nil {
-			http.Error(writer, "Invalid input", http.StatusBadRequest)
-			return
-		}
+
+		err := json.NewDecoder(request.Body).Decode(&playerInput)
+
+		if err != nil {
+            fmt.Println("Error decoding request body:", err)
+            http.Error(writer, "Bad Request", http.StatusBadRequest)
+            return
+        }
 
 		response := game.RunGame(playerInput)
 
-		if err := json.NewEncoder(writer).Encode(response); err != nil {
-			http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-			return
-		}
+		json.NewEncoder(writer).Encode(response)
 
 		if response.GameOver {
 			break
@@ -47,22 +47,27 @@ func CorsMiddleware(next http.Handler) http.Handler {
 
 func main() {
 
-	router := http.NewServeMux()
-
-	router.HandleFunc("GET /", rootHandler)
-	router.HandleFunc("GET /NewGame", startGame)
-
-	game = &model.Game{}
-	game.SetupGame()
-
 	// commands := []string{"start", "look"}
+
+	// game := &model.Game{}
+    // game.SetupGame()
 
 	// for _, command := range commands {
 
-	// 	gameResponse := game.RunGame(model.PlayerInput{Command: command, Args: []string{}})
+	// 		gameResponse := game.RunGame(model.PlayerInput{Command: command, Args: []string{}})
+	
+	// 		fmt.Printf("response: %s", gameResponse.Message)
+	// 	}
+
 
 	// 	fmt.Printf("response: %s", gameResponse.Message)
-	// }
+	router := http.NewServeMux()
+
+	router.HandleFunc("GET /", rootHandler)
+	router.HandleFunc("POST /GameResponse", startGame)
+
+	game = &model.Game{}
+	game.SetupGame()
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173"},

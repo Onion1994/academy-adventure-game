@@ -42,6 +42,7 @@ func isPlate(itemName string) bool {
 
 func (p *Player) Take(itemName string, display Display) string {
 	item, ok := p.CurrentRoom.Items[itemName]
+	fmt.Println(item)
 	switch {
 	case !ok || item.Hidden:
 		return display.Show(fmt.Sprintf("You can't take %s\n", itemName))
@@ -60,12 +61,15 @@ func (p *Player) Take(itemName string, display Display) string {
 		}
 
 	default:
+		fmt.Println("Item taken")
 		return p.AddToInventory(item, display)
 	}
 }
 
 func (p *Player) AddToInventory(item *Item, display Display) string {
+	fmt.Println("Adding to inventory")
 	p.Inventory[item.Name] = item
+	fmt.Println(p.Inventory)
 	p.ChangeCarriedWeight(item, "increase")
 	delete(p.CurrentRoom.Items, item.Name)
 	return display.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
@@ -101,18 +105,19 @@ func (p *Player) Drop(itemName string, display Display) string {
 }
 
 func (p *Player) ShowInventory(display Display) string {
+	fmt.Println("Blah1")
 	if len(p.Inventory) == 0 {
-
+		fmt.Println("Blah2")
 		return display.Show(fmt.Sprintf("Your inventory is empty.\nAvailable space: %d\n", p.AvailableWeight))
 	}
-
 	var itemArray []string
 	itemArray = append(itemArray, (fmt.Sprintf("Available space: %d\nYour inventory contains:\n", p.AvailableWeight)))
-
+	fmt.Println("Blah3")
 	for itemName, item := range p.Inventory {
+		fmt.Println("Blah4")
 		itemArray = append(itemArray, (fmt.Sprintf("- %s: %s Weight: %d\n", itemName, item.Description, item.Weight)))
+		fmt.Println("Blah5")
 	}
-
 	return display.Show(strings.Join(itemArray, ""))
 }
 

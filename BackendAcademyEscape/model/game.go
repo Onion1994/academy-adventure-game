@@ -25,6 +25,10 @@ type Game struct {
 	terminalRoom              *Room
 }
 
+var kettleApproachedFirst = false
+var sofaApproachedFirst = false
+var deskApproachedFirst = false
+
 var Commands = map[string]Command{
 	"look":      LookCommand{},
 	"exit":      ExitCommand{},
@@ -81,17 +85,22 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 	response.GameOver = false
 
 	for !global.GameOver {
-		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "sofa" {
+		fmt.Println(game.player.Inventory)
+		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "sofa" && !sofaApproachedFirst{
 			abandonedLanyard.Hidden = false
 			sofa.SetDescription("Your fellow academy student continues to sleep on the sofa. Something tells you it's down to you to get stuff done today...")
+			sofaApproachedFirst = true
 		}
 
-		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "kettle" {
+		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "kettle" && !kettleApproachedFirst {
+			fmt.Println("This is before nil pointer")
+			fmt.Println(game.player.Inventory)
 			tea.Hidden = false
 			kettle.SetDescription("A kettle — essential for survival, impossible to function without one nearby.")
+			kettleApproachedFirst = true
 		}
 
-		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "desk" {
+		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "desk" && !deskApproachedFirst {
 			firstPlate.Hidden = false
 			secondPlate.Hidden = false
 			thirdPlate.Hidden = false
@@ -99,6 +108,7 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 			fifthPlate.Hidden = false
 			sixthPlate.Hidden = false
 			desk.SetDescription("Despite the disarray, it's clear this desk sees frequent use, with just enough space left to get work done.")
+			deskApproachedFirst = true
 		}
 
 		for _, validInteraction := range ValidInteractions {

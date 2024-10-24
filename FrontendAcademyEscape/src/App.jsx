@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import Game from './Game';
 
 function App() {
   const [title, setTitle] = useState("")
@@ -20,7 +21,11 @@ function App() {
   fetchTitle()
 
   return (
-    <h1> {title} </h1>
+    <div>
+      <h1> {title} </h1>
+      <Game /> 
+      </div>
+
   )
 }
 
