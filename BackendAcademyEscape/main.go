@@ -39,6 +39,25 @@ func startGame(writer http.ResponseWriter, request *http.Request) {
 		}
 }
 
+func getAvailableActions(writer http.ResponseWriter, request *http.Request) {
+	
+	var command model.GameCommand
+
+	err := json.NewDecoder(request.Body).Decode(&command)
+
+	if err != nil {
+		fmt.Println("Error decoding request body:", err)
+		http.Error(writer, "Bad Request Body", http.StatusBadRequest)
+		return
+	}
+
+	response := game.GetAvailableActions(command.Command)
+
+	json.NewEncoder(writer).Encode(response)
+
+}
+
+
 func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -66,6 +85,7 @@ func main() {
 
 	router.HandleFunc("/", rootHandler)
 	router.HandleFunc("/GameResponse", startGame)
+	router.HandleFunc("/CommandOptions", getAvailableActions)
 
 	game = &model.Game{}
 	game.SetupGame()

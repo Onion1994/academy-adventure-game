@@ -17,7 +17,7 @@ function Game() {
     ]);
 
     //Dummy actions for development must replace 
-    
+
     const [availableActions, setAvailableActions] = useState({
         look: [],
         exit: [],
@@ -51,7 +51,7 @@ function Game() {
             }
             const data = await response.json();
             setOutput(data.message);
-            setGameStarted(true); 
+            setGameStarted(true);
         } catch (error) {
             console.error('Error fetching response', error);
             setOutput('Error starting game');
@@ -83,31 +83,60 @@ function Game() {
         }
     };
 
+    useEffect(() => {
+        if (selectedCommand) {
+            fetchAvailableActions();
+        }
+    }, [selectedCommand]);
+
+    const fetchAvailableActions = async () => {
+        try {
+            const requestData = {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ command: selectedCommand }),
+            };
+            const response = await fetch('http://localhost:8080/CommandOptions', requestData);
+            if (!response.ok) {
+                throw new Error('Failed to fetch response');
+            }
+            const data = await response.json();
+            console.log(data.actions);
+            setAvailableActions(prevActions => ({
+                ...prevActions,
+                [selectedCommand]: data.actions
+            }));
+        } catch (error) {
+            console.error('Error fetching response', error);
+            setOutput('Error fetching response');
+        }
+    };
+
     return (
         <>
-        {!gameStarted ? (
-            <button onClick={startGame}>Start Game</button>
-        ) : (
-            <form onSubmit={fetchResponse}>
-                <select onChange={(e) => setSelectedCommand(e.target.value)} value={selectedCommand}>
-                    <option value="">Select a command</option>
-                    {commands.map((command) => (
-                        <option key={command} value={command}>{command}</option>
-                    ))}
-                </select>
-
-                {selectedCommand && availableActions[selectedCommand].length > 0 && (
-                    <select onChange={(e) => setSelectedArgument(e.target.value)} value={selectedArgument}>
-                        <option value="">Select an argument</option>
-                        {availableActions[selectedCommand].map((action) => (
-                            <option key={action} value={action}>{action}</option>
+            {!gameStarted ? (
+                <button onClick={startGame}>Start Game</button>
+            ) : (
+                <form onSubmit={fetchResponse}>
+                   <select onChange={(e) => setSelectedCommand(e.target.value)} value={selectedCommand}>
+                        <option value="">Select a command</option>
+                        {commands.map((command) => (
+                            <option key={command} value={command}>{command}</option>
                         ))}
                     </select>
-                )}
 
-                <button type='submit'>Submit</button>
-            </form>
-        )}
+                    {selectedCommand && availableActions[selectedCommand].length > 0 && (
+                        <select onChange={(e) => setSelectedArgument(e.target.value)} value={selectedArgument}>
+                            <option value="">Select an argument</option>
+                            {availableActions[selectedCommand].map((action) => (
+                                <option key={action} value={action}>{action}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    <button type='submit'>Submit</button>
+                </form>
+            )}
             <p>{output}</p>
         </>
     );
