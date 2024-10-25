@@ -1,13 +1,11 @@
 package model
 
-import "fmt"
-
 type Display interface {
-	Show(text string)
+	Show(text string) string
 }
 
 type ConsoleDisplay struct{}
 
-func (c ConsoleDisplay) Show(text string) {
-	fmt.Println(text)
+func (c ConsoleDisplay) Show(text string) string {
+	return text
 }

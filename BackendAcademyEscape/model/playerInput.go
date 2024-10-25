@@ -1,10 +1,10 @@
 package model
 
 type PlayerInput struct {
-	Command string
-	Args []string
+	Command string   `json:"command"`
+	Args    []string `json:"args"`
 }
 
-func (p *PlayerInput) ParseInput(){
+func (p *PlayerInput) ParseInput() {
 
 }

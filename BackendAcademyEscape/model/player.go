@@ -3,6 +3,7 @@ package model
 import (
 	"academy-adventure-game/global"
 	"fmt"
+	"strings"
 )
 
 type Player struct {
@@ -17,16 +18,16 @@ var plateOrder = []string{"first-plate", "second-plate", "third-plate", "fourth-
 var currentPlateIndex = 0
 var ValidInteractions = []*Interaction{}
 
-func (p *Player) Move(direction string, display Display) {
+func (p *Player) Move(direction string, display Display) string {
 	if p.CurrentEntity != nil {
 		p.CurrentEntity = nil
 	}
 	if newRoom, ok := p.CurrentRoom.Exits[direction]; ok {
 		p.CurrentRoom = newRoom
 
-		display.Show(fmt.Sprintf("You are in %s\n", p.CurrentRoom.Name))
+		return display.Show(fmt.Sprintf("You are in %s\n", p.CurrentRoom.Name))
 	} else {
-		display.Show("You can't go that way!\n")
+		return display.Show("You can't go that way!\n")
 	}
 }
 
@@ -39,34 +40,39 @@ func isPlate(itemName string) bool {
 	return false
 }
 
-func (p *Player) Take(itemName string, display Display) {
+func (p *Player) Take(itemName string, display Display) string {
 	item, ok := p.CurrentRoom.Items[itemName]
+	fmt.Println(item)
 	switch {
 	case !ok || item.Hidden:
-		display.Show(fmt.Sprintf("You can't take %s\n", itemName))
-		return
+		return display.Show(fmt.Sprintf("You can't take %s\n", itemName))
+
 	case p.AvailableWeight < item.Weight:
-		display.Show(fmt.Sprintln("Weight limit reached! Please drop an item before taking more."))
-		return
+		return display.Show(fmt.Sprintln("Weight limit reached! Please drop an item before taking more."))
+
 	case isPlate(itemName):
 		if itemName == plateOrder[currentPlateIndex] {
-			p.AddToInventory(item, display)
 			currentPlateIndex++
+			return p.AddToInventory(item, display)
+
 		} else {
-			display.Show(fmt.Sprintln("As you attempt to grab the greasy plates without removing the ones stacked above them, they slip from your grasp and shatter, creating a chaotic mess.\n\nNow Rosie is very grumpy."))
 			global.GameOver = true
+			return display.Show(fmt.Sprintln("As you attempt to grab the greasy plates without removing the ones stacked above them, they slip from your grasp and shatter, creating a chaotic mess.\n\nNow Rosie is very grumpy."))
 		}
 
 	default:
-		p.AddToInventory(item, display)
+		fmt.Println("Item taken")
+		return p.AddToInventory(item, display)
 	}
 }
 
-func (p *Player) AddToInventory(item *Item, display Display) {
+func (p *Player) AddToInventory(item *Item, display Display) string {
+	fmt.Println("Adding to inventory")
 	p.Inventory[item.Name] = item
+	fmt.Println(p.Inventory)
 	p.ChangeCarriedWeight(item, "increase")
 	delete(p.CurrentRoom.Items, item.Name)
-	display.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
+	return display.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
 }
 
 func (p *Player) ChangeCarriedWeight(item *Item, operation string) {
@@ -82,63 +88,70 @@ func (p *Player) ChangeCarriedWeight(item *Item, operation string) {
 	}
 }
 
-func (p *Player) Drop(itemName string, display Display) {
+func (p *Player) Drop(itemName string, display Display) string {
 	if item, ok := p.Inventory[itemName]; ok {
 		if isPlate(itemName) {
-			display.Show("You can't just leave those plates lying around! It's time to load them into the dishwasher!")
-			return
+			return display.Show("You can't just leave those plates lying around! It's time to load them into the dishwasher!")
 		}
 
 		delete(p.Inventory, item.Name)
 		p.ChangeCarriedWeight(item, "decrease")
 		p.CurrentRoom.Items[item.Name] = item
 
-		display.Show(fmt.Sprintf("You dropped %s.\n\n", item.Name))
+		return display.Show(fmt.Sprintf("You dropped %s.\n\n", item.Name))
 	} else {
-		display.Show(fmt.Sprintf("You don't have %s.\n\n", itemName))
+		return display.Show(fmt.Sprintf("You don't have %s.\n\n", itemName))
 	}
 }
 
-func (p *Player) ShowInventory(display Display) {
+func (p *Player) ShowInventory(display Display) string {
+	fmt.Println("Blah1")
 	if len(p.Inventory) == 0 {
-		display.Show(fmt.Sprintf("Your inventory is empty.\nAvailable space: %d\n", p.AvailableWeight))
-		return
+		fmt.Println("Blah2")
+		return display.Show(fmt.Sprintf("Your inventory is empty.\nAvailable space: %d\n", p.AvailableWeight))
 	}
-	display.Show(fmt.Sprintf("Available space: %d\nYour inventory contains:\n", p.AvailableWeight))
+	var itemArray []string
+	itemArray = append(itemArray, (fmt.Sprintf("Available space: %d\nYour inventory contains:\n", p.AvailableWeight)))
+	fmt.Println("Blah3")
 	for itemName, item := range p.Inventory {
-		display.Show(fmt.Sprintf("- %s: %s Weight: %d\n", itemName, item.Description, item.Weight))
+		fmt.Println("Blah4")
+		itemArray = append(itemArray, (fmt.Sprintf("- %s: %s Weight: %d\n", itemName, item.Description, item.Weight)))
+		fmt.Println("Blah5")
 	}
+	return display.Show(strings.Join(itemArray, ""))
 }
 
-func (p *Player) ShowRoom(display Display) {
-	display.Show(fmt.Sprintf("You are in %s\n\n%s\n", p.CurrentRoom.Name, p.CurrentRoom.Description))
+func (p *Player) ShowRoom(display Display) string {
+	var returnValue []string
+	returnValue = append(returnValue, display.Show(fmt.Sprintf("You are in %s\n\n%s\n", p.CurrentRoom.Name, p.CurrentRoom.Description)))
 
 	if p.EntitiesArePresent() {
-		display.Show("\nYou can approach:\n")
+		returnValue = append(returnValue, display.Show("\nYou can approach:\n"))
 		for _, entity := range p.CurrentRoom.Entities {
 			switch {
 			case p.PlayerIsEngaged():
 				if entity.Name == p.CurrentEntity.Name {
-					display.Show(fmt.Sprintf("- %s (currently approached)\n", entity.Name))
+					returnValue = append(returnValue, display.Show(fmt.Sprintf("- %s (currently approached)\n", entity.Name)))
 				} else if !entity.Hidden {
-					display.Show(fmt.Sprintf("- %s\n", entity.Name))
+					returnValue = append(returnValue, display.Show(fmt.Sprintf("- %s\n", entity.Name)))
 				}
 			default:
 				if !entity.Hidden {
-					display.Show(fmt.Sprintf("- %s\n", entity.Name))
+					returnValue = append(returnValue, display.Show(fmt.Sprintf("- %s\n", entity.Name)))
 				}
 			}
 		}
 	}
 
 	if p.ItemsArePresent() {
-		display.Show("\nThe room contains:")
+		returnValue = append(returnValue, display.Show("\nThe room contains:"))
 		for itemName, item := range p.CurrentRoom.Items {
 			if !item.Hidden {
-				display.Show(fmt.Sprintf("\n- %s: %s Weight: %d\n", itemName, item.Description, item.Weight))
+				returnValue = append(returnValue, display.Show(fmt.Sprintf("\n- %s: %s Weight: %d\n", itemName, item.Description, item.Weight)))
 			}
 		}
 	}
+	return strings.Join(returnValue, "")
 }
 
 func (p *Player) PlayerIsEngaged() bool {
@@ -167,58 +180,58 @@ func (p *Player) EntitiesArePresent() bool {
 	return false
 }
 
-func (p *Player) Approach(entityName string, display Display) {
+func (p *Player) Approach(entityName string, display Display) string {
 	if p.CurrentEntity != nil {
 		p.CurrentEntity = nil
 	}
 	if entity, ok := p.CurrentRoom.Entities[entityName]; ok && !entity.Hidden {
 
 		p.CurrentEntity = entity
-		display.Show(entity.Description)
+		return display.Show(entity.Description)
 	} else {
-		display.Show(fmt.Sprintf("You can't approach %s.\n", entityName))
+		return display.Show(fmt.Sprintf("You can't approach %s.\n", entityName))
 	}
 }
 
-func (p *Player) Leave() {
+func (p *Player) Leave() string {
 	if p.CurrentEntity != nil {
 		p.CurrentEntity = nil
-		p.ShowRoom(ConsoleDisplay{})
+		return p.ShowRoom(ConsoleDisplay{})
 	} else {
-		fmt.Println("You have not approached anything. If you wish to leave the game, use the exit command.")
+		return ("You have not approached anything. If you wish to leave the game, use the exit command.")
 	}
 }
 
-func (p *Player) ShowMap(display Display) {
+func (p *Player) ShowMap(display Display) string {
+	var returnValue []string
 	for direction, exit := range p.CurrentRoom.Exits {
-		display.Show(fmt.Sprintf("%s: %s\n", direction, exit.Name))
+		returnValue = append(returnValue, (fmt.Sprintf("%s: %s\n", direction, exit.Name)))
 	}
+	return display.Show(strings.Join(returnValue, ""))
 }
 
-func (p *Player) Use(itemName string, target string, display Display) {
+func (p *Player) Use(itemName string, target string, display Display) string {
 
 	if p.CurrentEntity == nil {
-		display.Show("Approach to use an item.\n")
-		return
+		return display.Show("Approach to use an item.\n")
+
 	}
 
 	if p.CurrentEntity.Name != target {
-		display.Show(fmt.Sprintf("%s not found.\n", target))
-		return
+		return display.Show(fmt.Sprintf("%s not found.\n", target))
 	}
 
 	if itemIsNotInInventory(p, itemName) {
-		display.Show(fmt.Sprintf("You don't have %s.\n", itemName))
-		return
+		return display.Show(fmt.Sprintf("You don't have %s.\n", itemName))
+
 	}
 
 	for _, interaction := range ValidInteractions {
 		if interactionIsValid(interaction, itemName, target) {
-			handleInteraction(p, interaction, itemName)
-			return
+			return handleInteraction(p, interaction, itemName)
 		}
 	}
-	display.Show(fmt.Sprintf("You can't use %s on %s.\n", itemName, target))
+	return display.Show(fmt.Sprintf("You can't use %s on %s.\n", itemName, target))
 }
 
 func itemIsNotInInventory(player *Player, itemName string) bool {
@@ -229,13 +242,14 @@ func interactionIsValid(interaction *Interaction, itemName string, target string
 	return interaction.ItemName == itemName && interaction.EntityName == target
 }
 
-func handleInteraction(player *Player, interaction *Interaction, itemName string) {
-	player.TriggerEvent(interaction.Event)
+func handleInteraction(player *Player, interaction *Interaction, itemName string) string {
+	
 	player.ChangeCarriedWeight(player.Inventory[itemName], "decrease")
 	delete(player.Inventory, itemName)
+	return player.TriggerEvent(interaction.Event)
 }
 
-func (p *Player) TriggerEvent(event *Event) {
-	fmt.Println(event.Outcome)
+func (p *Player) TriggerEvent(event *Event) string {
 	event.Triggered = true
+	return event.Outcome
 }
