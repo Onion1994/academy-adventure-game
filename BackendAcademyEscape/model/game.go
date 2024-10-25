@@ -3,7 +3,6 @@ package model
 import (
 	"academy-adventure-game/global"
 	"fmt"
-	"strings"
 )
 
 type Game struct {
@@ -14,7 +13,6 @@ type Game struct {
 	introductionShown         bool
 	dishwasherChallengeWon    *Event
 	unlockComputer            *Event
-	grumpyRosie               *Event
 	remainingPasswordAttempts int
 	computerPassword          string
 	isAttemptingPassword      bool
@@ -29,7 +27,6 @@ var kettleApproachedFirst = false
 var sofaApproachedFirst = false
 var deskApproachedFirst = false
 var lanyardEventCompleted = false
-
 
 var Commands = map[string]Command{
 	"look":      LookCommand{},
@@ -49,10 +46,11 @@ func executeCommand(input PlayerInput, game *Game) string {
 
 	command := input.Command
 
+
 	cmd, exists := Commands[command]
 
 	if command == game.computerPassword {
-		return "Yay you cracked the password"
+		return game.unlockComputer.Outcome
 	}
 
 	if !exists {
@@ -86,7 +84,7 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 	var response GameResponse
 	response.GameOver = false
 
-	for !global.GameOver {
+	if !global.GameOver {
 		fmt.Println(game.player.Inventory)
 		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "sofa" && !sofaApproachedFirst{
 			abandonedLanyard.Hidden = false
@@ -122,26 +120,43 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 		}
 
 		dishwasherLoaded := true
-		for _, validInteraction := range ValidInteractions {
-			if strings.HasSuffix(validInteraction.ItemName, "plate") && !validInteraction.Event.Triggered {
+
+		// Check if all plates have been loaded
+		plates := []*Interaction{
+			ValidInteractions[1],
+			ValidInteractions[2],
+			ValidInteractions[3],
+			ValidInteractions[4],
+			ValidInteractions[5],
+			ValidInteractions[6],
+		}
+	
+		for _, plate := range plates {
+			fmt.Println(plate.Event.Triggered)
+			if !plate.Event.Triggered {
 				dishwasherLoaded = false
 				break
 			}
 		}
-
+	
 		if !game.dishwasherChallengeWon.Triggered {
 			if dishwasherLoaded {
 				game.player.TriggerEvent(game.dishwasherChallengeWon)
 				alan.SetDescription("Ah, so you've managed to load the dishwasher! Splendid work — consider this challenge complete.\nI could have done it myself instead of writing that clever recursive function, but where's the fun in that?\nAfter all, they pay me for my intellect, not for doing the heavy lifting!\nBut I digress. You're free to proceed to the terminal room and speak with Dan for your final challenge.\nYou're doing an excellent job; keep it up!")
 				dan.Hidden = false
 				terminal.Hidden = false
+
+				return GameResponse{
+					Message: game.dishwasherChallengeWon.Outcome,
+					GameOver: false,
+				}
 			}
 		}
 
 		if _, ok := game.player.Inventory["abandoned-lanyard"]; ok {
-			game.player.TriggerEvent(game.grumpyRosie)
 			global.GameOver = true
 			response.GameOver = true
+			return response
 		}
 
 		if global.GameOver {
@@ -273,7 +288,7 @@ func (game *Game) SetupGame() {
 
 	game.dishwasherChallengeWon = &Event{Description: "dishwasher-loaded", Outcome: "You load the dirty plates into the dishwasher and switch it on, a feeling of being used washing over you.\nThis challenge felt less like teamwork and more like being roped into someone else's mess.\nWith a sigh, you decide to head back to Alan to see if this effort has truly led you to victory...\n", Triggered: false}
 
-	game.grumpyRosie = &Event{Description: "rosie-is-grumpy", Outcome: "Rosie caught you in the act of swiping a lanyard from a fellow student.\nYou have made Rosie grumpy and you've lost the game.\n", Triggered: false}
+
 
 	game.unlockComputer = &Event{Description: "computer-is-unlocked", Outcome: "You enter the password, holding your breath. Yes! The screen flickers to life.\nyou've unlocked the computer and now have full access.\n\nYou should approach Alan to find out what's next...\n", Triggered: false}
 

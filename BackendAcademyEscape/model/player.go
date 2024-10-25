@@ -72,6 +72,9 @@ func (p *Player) AddToInventory(item *Item, display Display) string {
 	fmt.Println(p.Inventory)
 	p.ChangeCarriedWeight(item, "increase")
 	delete(p.CurrentRoom.Items, item.Name)
+	if item.Name == "abandoned-lanyard" {
+		return "Rosie caught you in the act of swiping a lanyard from a fellow student.\nYou have made Rosie grumpy and you've lost the game."
+	}
 	return display.Show(fmt.Sprintf("%s has been added to your inventory.\n", item.Name))
 }
 
@@ -228,6 +231,7 @@ func (p *Player) Use(itemName string, target string, display Display) string {
 
 	for _, interaction := range ValidInteractions {
 		if interactionIsValid(interaction, itemName, target) {
+			
 			return handleInteraction(p, interaction, itemName)
 		}
 	}
@@ -250,6 +254,7 @@ func handleInteraction(player *Player, interaction *Interaction, itemName string
 }
 
 func (p *Player) TriggerEvent(event *Event) string {
+	
 	event.Triggered = true
 	return event.Outcome
 }
