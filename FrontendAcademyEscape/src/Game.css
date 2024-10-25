@@ -1,0 +1,66 @@
+/* Game.css */
+
+body {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #282c34;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #ffdd99;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(50, 50, 50, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+select {
+    width: 220px;
+    padding: 10px;
+    margin: 10px 0;
+    border: 2px solid #ffdd99;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #444;
+    color: #ffdd99;
+}
+
+select:focus {
+    border-color: #ff9900;
+    outline: none;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #00b386;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+button:hover {
+    background-color: #00b386;
+    transform: scale(1.05);
+}
+
+p {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 20px;
+    color: #ffdd99;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+}
