@@ -42,6 +42,9 @@ var Commands = map[string]Command{
 	"map":       MapCommand{},
 }
 
+func (game *Game) GetAvailableActions(command string) GameActions {
+	return GameActions{ Actions:[]string{"tea"}}
+}
 func executeCommand(input PlayerInput, game *Game) string {
 
 	command := input.Command
