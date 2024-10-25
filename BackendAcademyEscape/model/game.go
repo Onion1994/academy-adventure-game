@@ -28,6 +28,8 @@ type Game struct {
 var kettleApproachedFirst = false
 var sofaApproachedFirst = false
 var deskApproachedFirst = false
+var lanyardEventCompleted = false
+
 
 var Commands = map[string]Command{
 	"look":      LookCommand{},
@@ -112,9 +114,10 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 		}
 
 		for _, validInteraction := range ValidInteractions {
-			if validInteraction.Event.Description == "get-your-lanyard" && validInteraction.Event.Triggered {
+			if validInteraction.Event.Description == "get-your-lanyard" && validInteraction.Event.Triggered && !lanyardEventCompleted{
 				lanyard.Hidden = false
 				rosie.SetDescription("Can I help with anything else?")
+				lanyardEventCompleted = true
 			}
 		}
 

@@ -228,7 +228,7 @@ func (p *Player) Use(itemName string, target string, display Display) string {
 
 	for _, interaction := range ValidInteractions {
 		if interactionIsValid(interaction, itemName, target) {
-			handleInteraction(p, interaction, itemName)
+			return handleInteraction(p, interaction, itemName)
 		}
 	}
 	return display.Show(fmt.Sprintf("You can't use %s on %s.\n", itemName, target))
@@ -242,13 +242,14 @@ func interactionIsValid(interaction *Interaction, itemName string, target string
 	return interaction.ItemName == itemName && interaction.EntityName == target
 }
 
-func handleInteraction(player *Player, interaction *Interaction, itemName string) {
-	player.TriggerEvent(interaction.Event)
+func handleInteraction(player *Player, interaction *Interaction, itemName string) string {
+	
 	player.ChangeCarriedWeight(player.Inventory[itemName], "decrease")
 	delete(player.Inventory, itemName)
+	return player.TriggerEvent(interaction.Event)
 }
 
-func (p *Player) TriggerEvent(event *Event) {
-	fmt.Println(event.Outcome)
+func (p *Player) TriggerEvent(event *Event) string {
 	event.Triggered = true
+	return event.Outcome
 }
