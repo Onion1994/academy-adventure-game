@@ -42,13 +42,45 @@ var Commands = map[string]Command{
 	"map":       MapCommand{},
 }
 
+// func (game *Game) GetAvailableActions(command string) GameActions {
+// 	return GameActions{ Actions:[]string{"tea"}}
+// }
+
 func (game *Game) GetAvailableActions(command string) GameActions {
-	return GameActions{ Actions:[]string{"tea"}}
+	gameActions := GameActions{Actions: []string{}}
+	switch command {
+	case "use":
+		for _, item := range game.player.Inventory {
+			gameActions.Actions = append(gameActions.Actions, item.Name)
+		}
+	case "drop":
+		for _, item := range game.player.Inventory {
+			gameActions.Actions = append(gameActions.Actions, item.Name)
+		}
+	case "approach":
+		for _, entity := range game.player.CurrentRoom.Entities {
+			if !entity.Hidden {
+				gameActions.Actions = append(gameActions.Actions, entity.Name)
+			}
+		}
+	case "take":
+		for _, item := range game.player.CurrentRoom.Items {
+			if !item.Hidden{
+			gameActions.Actions = append(gameActions.Actions, item.Name)
+			}
+		}
+	case "move":
+		for _, exit := range game.player.CurrentRoom.Exits {
+			gameActions.Actions = append(gameActions.Actions, exit.Name)
+		}
+	default:
+		return gameActions
+	}
+	return gameActions
 }
 func executeCommand(input PlayerInput, game *Game) string {
 
 	command := input.Command
-
 
 	cmd, exists := Commands[command]
 
@@ -88,16 +120,13 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 	response.GameOver = false
 
 	if !global.GameOver {
-		fmt.Println(game.player.Inventory)
-		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "sofa" && !sofaApproachedFirst{
+		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "sofa" && !sofaApproachedFirst {
 			abandonedLanyard.Hidden = false
 			sofa.SetDescription("Your fellow academy student continues to sleep on the sofa. Something tells you it's down to you to get stuff done today...")
 			sofaApproachedFirst = true
 		}
 
 		if game.player.CurrentEntity != nil && game.player.CurrentEntity.Name == "kettle" && !kettleApproachedFirst {
-			fmt.Println("This is before nil pointer")
-			fmt.Println(game.player.Inventory)
 			tea.Hidden = false
 			kettle.SetDescription("A kettle — essential for survival, impossible to function without one nearby.")
 			kettleApproachedFirst = true
@@ -115,7 +144,7 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 		}
 
 		for _, validInteraction := range ValidInteractions {
-			if validInteraction.Event.Description == "get-your-lanyard" && validInteraction.Event.Triggered && !lanyardEventCompleted{
+			if validInteraction.Event.Description == "get-your-lanyard" && validInteraction.Event.Triggered && !lanyardEventCompleted {
 				lanyard.Hidden = false
 				rosie.SetDescription("Can I help with anything else?")
 				lanyardEventCompleted = true
@@ -133,15 +162,14 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 			ValidInteractions[5],
 			ValidInteractions[6],
 		}
-	
+
 		for _, plate := range plates {
-			fmt.Println(plate.Event.Triggered)
 			if !plate.Event.Triggered {
 				dishwasherLoaded = false
 				break
 			}
 		}
-	
+
 		if !game.dishwasherChallengeWon.Triggered {
 			if dishwasherLoaded {
 				game.player.TriggerEvent(game.dishwasherChallengeWon)
@@ -150,7 +178,7 @@ func (game *Game) RunGame(playerInput PlayerInput) GameResponse {
 				terminal.Hidden = false
 
 				return GameResponse{
-					Message: game.dishwasherChallengeWon.Outcome,
+					Message:  game.dishwasherChallengeWon.Outcome,
 					GameOver: false,
 				}
 			}
@@ -290,8 +318,6 @@ func (game *Game) SetupGame() {
 	}
 
 	game.dishwasherChallengeWon = &Event{Description: "dishwasher-loaded", Outcome: "You load the dirty plates into the dishwasher and switch it on, a feeling of being used washing over you.\nThis challenge felt less like teamwork and more like being roped into someone else's mess.\nWith a sigh, you decide to head back to Alan to see if this effort has truly led you to victory...\n", Triggered: false}
-
-
 
 	game.unlockComputer = &Event{Description: "computer-is-unlocked", Outcome: "You enter the password, holding your breath. Yes! The screen flickers to life.\nyou've unlocked the computer and now have full access.\n\nYou should approach Alan to find out what's next...\n", Triggered: false}
 
